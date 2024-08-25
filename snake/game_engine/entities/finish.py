@@ -13,8 +13,7 @@ class Finish(StaticEntity):
                                 , offsetx + block_size*(self.x + self.width)
                                 , offsety + block_size*(self.y + self.height)
                                 , fill="black", outline="white")
-
-        #Checkerboard pattern
+        # Checkerboard pattern
         for i in range(self.width):
             for j in range(self.height):
                 if (i + j) % 2 == 1:
@@ -30,22 +29,28 @@ class Finish(StaticEntity):
                                         , offsety + block_size*(self.y + j + 1) - 1
                                         , fill=color, outline=outline)
 
-
-
-    # The finish is solid
+    # The finish is solid (nothing will probably collide with it anyway)
     def get_collision_coords(self) -> list[tuple[int, int]]:
-        return [(self.x + dx, self.y + dy)
-                for dx in range(self.width)
-                for dy in range(self.height)]
+        collision_coords = []
 
-    # The finish does not hurt the snake
-    def get_hurt_coords(self) -> list[tuple[int, int]]:
-        return []
+        for dx in range(self.width):
+            collision_coords.append((self.x + dx, self.y))
+            collision_coords.append((self.x + dx, self.y + self.height - 1))
+        for dy in range(self.height):
+            collision_coords.append((self.x, self.y + dy))
+            collision_coords.append((self.x + self.width - 1, self.y + dy))
 
-    # The finish does not conduct electricity
-    def get_electricity_coords(self) -> list[tuple[int, int]]:
-        return []
+        return collision_coords
 
     # The finish is interactable one block above it
     def get_interact_coords(self) -> list[tuple[int, int]]:
         return [(self.x + dx, self.y - 1) for dx in range(self.width)]
+
+    # The finish ends the level when interacted with
+    def get_interact_type(self) -> StaticEntity.InteractType:
+        return StaticEntity.InteractType.FINISH
+
+    # The finish does not hurt the snake
+    def get_hurt_coords(self) -> list[tuple[int, int]]: return []
+    # The finish does not conduct electricity
+    def get_electricity_coords(self) -> list[tuple[int, int]]: return []

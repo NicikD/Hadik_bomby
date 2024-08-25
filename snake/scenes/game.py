@@ -7,13 +7,17 @@ from scenes import Scene
 #  0 - Exit level
 #  1-16 - Finished level 1-16
 class Game(Scene):
-    def __init__(self, canvas, level_number):
+    def __init__(self, canvas, level_number, debug):
         super().__init__(canvas)
 
+        self.debug = debug
         self.level_number = level_number
 
         # Camera offset because you only ever see a part of the level
         self.level, self.offsetx, self.offsety = load_level(level_number)
+
+        # Displays level number when level is started
+        self.displayed_level_number = False
 
         # To calculate the camera offset
         self.level_width = self.level.width
@@ -24,7 +28,8 @@ class Game(Scene):
     def process_frame(self, key_press):
         # Level finished succcessfully
         if self.engine.level_finished:
-            return self.level_number
+            self.is_running = False
+            self.exit_message = self.level_number
 
         # Exit level
         if key_press == "Escape":
@@ -52,6 +57,11 @@ class Game(Scene):
     def display_frame(self, paddingx, paddingy, screen_size) -> None:
         self.prepare_frame(paddingx, paddingy, screen_size)
 
+        if not self.displayed_level_number:
+            self.display_level_number(paddingx, paddingy, screen_size)
+            self.displayed_level_number = True
+            return
+
         # 17 blocks should fit on the screen
         block_size = screen_size / 17
 
@@ -59,10 +69,29 @@ class Game(Scene):
         entity_paddingx = paddingx + self.offsetx*block_size
         entity_paddingy = paddingy + self.offsety*block_size
 
-        # 17 block size screen
         self.level.snake.draw(self.canvas, entity_paddingx, entity_paddingy, block_size)
         for entity in self.level.static + self.level.dynamic:
             entity.draw(self.canvas, entity_paddingx, entity_paddingy, block_size)
+
+        # This should not be here but its just for debugging (maybe remove later)
+        if self.debug:
+            for x in range(self.level.width):
+                for y in range(self.level.height):
+                    groups = self.engine.static_engine._position_hash[(x, y)]
+                    self.canvas.create_text(entity_paddingx + (x + 0.5)*block_size
+                                            , entity_paddingy + (y + 0.5)*block_size
+                                            , text=groups, font="Arial 20", fill="red")
+
+    def display_level_number(self, paddingx, paddingy, screen_size) -> None:
+        font = f"Arial {int(screen_size/2)}"
+
+        self.canvas.delete("all")
+        self.canvas.create_rectangle(paddingx, paddingy, paddingx + screen_size, paddingy + screen_size
+                                     , fill="black", outline="black")
+        self.canvas.create_text(paddingx + screen_size/2, paddingy + screen_size/2,
+                                text=str(self.level_number), font=font, fill="white")
+        self.canvas.update()
+        self.canvas.after(1000)
 
     # This does not take into account if the snake actually moved - intentional
     def update_camera_offset(self, action):

@@ -41,10 +41,6 @@ class Snake(DynamicEntity):
     def get_collision_coords(self) -> list[tuple[int, int]]:
         return list(self.blocks)
 
-    # The snake does not hurt itself :D
-    def get_hurt_coords(self) -> list[tuple[int, int]]:
-        return []
-
     # The snake conducts electricity around itself
     def get_electricity_coords(self) -> list[tuple[int, int]]:
         electricity_coords = []
@@ -55,10 +51,15 @@ class Snake(DynamicEntity):
             electricity_coords.append((block[0], block[1] - 1))
             electricity_coords.append((block[0], block[1] + 1))
 
-    # The snake does not interact with itself :D
-    def get_interact_coords(self) -> list[tuple[int, int]]:
-        return []
-
     # There needs to be a solid entity one block below the snake
     def get_gravity_coords(self) -> list[tuple[int, int]]:
-        return [(x, y + 1) for x, y in self.blocks]
+        block_positions = set(self.blocks)
+
+        # Do not return those with another block under them
+        return [(x, y + 1) for x, y in self.blocks if (x, y + 1) not in block_positions]
+
+    # The snake does not hurt itself :D
+    def get_hurt_coords(self) -> list[tuple[int, int]]: return []
+    # The snake does not interact with itself :D
+    def get_interact_coords(self) -> list[tuple[int, int]]: return []
+    def get_interact_type(self) -> DynamicEntity.InteractType: return DynamicEntity.InteractType.NONE

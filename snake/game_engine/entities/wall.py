@@ -18,13 +18,16 @@ class Wall(StaticEntity):
 
     # The wall is solid
     def get_collision_coords(self) -> list[tuple[int, int]]:
-        return [(self.x + dx, self.y + dy)
-                for dx in range(self.width)
-                for dy in range(self.height)]
+        collision_coords = []
 
-    # The wall does not hurt the snake
-    def get_hurt_coords(self) -> list[tuple[int, int]]:
-        return []
+        for dx in range(self.width):
+            collision_coords.append((self.x + dx, self.y))
+            collision_coords.append((self.x + dx, self.y + self.height - 1))
+        for dy in range(self.height):
+            collision_coords.append((self.x, self.y + dy))
+            collision_coords.append((self.x + self.width - 1, self.y + dy))
+
+        return collision_coords
 
     # The wall conducts electricity around it
     def get_electricity_coords(self) -> list[tuple[int, int]]:
@@ -32,13 +35,16 @@ class Wall(StaticEntity):
 
         for dx in range(self.width):
             electricity_coords.append((self.x + dx, self.y - 1))
-            electricity_coords.append((self.x + dx, self.y + self.height + 1))
+            electricity_coords.append((self.x + dx, self.y + self.height))
         for dy in range(self.height):
             electricity_coords.append((self.x - 1, self.y + dy))
-            electricity_coords.append((self.x + self.width + 1, self.y + dy))
+            electricity_coords.append((self.x + self.width, self.y + dy))
 
         return electricity_coords
 
-    # The wall is not interactable
-    def get_interact_coords(self) -> list[tuple[int, int]]:
+    # The wall does not hurt the snake
+    def get_hurt_coords(self) -> list[tuple[int, int]]:
         return []
+    # The wall is not interactable
+    def get_interact_coords(self) -> list[tuple[int, int]]: return []
+    def get_interact_type(self) -> StaticEntity.InteractType: return StaticEntity.InteractType.NONE

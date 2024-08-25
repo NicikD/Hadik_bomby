@@ -1,44 +1,44 @@
-# Groups static entities that   to create static groups using depth first search
-#  used in the static engine
+from collections import deque
+from game_engine.entities import StaticEntity
 
 
-def dfs(grid, visited, x, y, current_group):
-    """Perform DFS to find all overlapping shapes."""
-    # Directions for left, right, up, down movements
-    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+# Groups static entities that share charge (are connected to each other by at least one side)
+#  used in the static engine to preprocess electricity interactions
+def get_connected_conductive_groups(entities: list[StaticEntity]):
+    # Only conductive entities are considered
+    entities = [entity for entity in entities if entity.conductive]
 
-    stack = [(x, y)]
-    while stack:
-        cx, cy = stack.pop()
-        if visited[cx][cy]:
-            continue
+    groups: list[list[StaticEntity]] = []
 
-        visited[cx][cy] = True
-        current_group.append((cx, cy))
+    while entities:
+        # Group of entities that are connected
+        connected: list[StaticEntity] = []
+        # Stack of entities not checked yet
+        not_checked: deque[StaticEntity] = deque([entities.pop()])
 
-        for dx, dy in directions:
-            nx, ny = cx + dx, cy + dy
+        while not_checked:
+            current = not_checked.pop()
 
-            # Check boundaries and ensure we are visiting only same shapes
-            if 0 <= nx < len(grid) and 0 <= ny < len(grid[0]) and not visited[nx][ny]:
-                stack.append((nx, ny))
+            for entity in pop_connected_entities(current, entities):
+                not_checked.append(entity)
 
+            connected.append(current)
 
-def find_overlapping_groups(grid):
-    """Find all groups of overlapping shapes."""
-    if not grid or not grid[0]:
-        return []
-
-    visited = [[False for _ in range(len(grid[0]))] for _ in range(len(grid))]
-    groups = []
-
-    for i in range(len(grid)):
-        for j in range(len(grid[0])):
-            if not visited[i][j]:
-                current_group = []
-                dfs(grid, visited, i, j, current_group)
-                if current_group:
-                    groups.append(current_group)
+        groups.append(connected)
 
     return groups
 
+
+# Get connected groups is recursive, this is just a single iteration
+def pop_connected_entities(current: StaticEntity, entities: list[StaticEntity]):
+    connected: list[StaticEntity] = []
+    current_reach = set(current.get_electricity_coords())
+
+    for entity in entities:
+        # The entities are connected
+        if current_reach.intersection(set(entity.get_collision_coords())):
+            connected.append(entity)
+
+    # To not lose the reference
+    entities[:] = [entity for entity in entities if entity not in connected]
+    return connected

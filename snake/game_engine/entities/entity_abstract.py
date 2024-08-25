@@ -1,8 +1,15 @@
 from abc import ABC, abstractmethod
 from tkinter import Canvas
+from enum import Enum, auto
 
 
 class Entity(ABC):
+    class InteractType(Enum):
+        NONE = auto()
+        FINISH = auto()
+        FOOD = auto()
+        CHECKPOINT = auto()
+
     @abstractmethod
     def __init__(self, conductive: bool, charge: bool):
 
@@ -35,6 +42,10 @@ class Entity(ABC):
     # In these coords the entity will interact with the snake
     def get_interact_coords(self) -> list[tuple[int, int]]: pass
 
+    @abstractmethod
+    # What type of interaction can the snake do with this entity
+    def get_interact_type(self) -> "Entity.InteractType": pass
+
 
 # Simple rectangle shape
 # Does not change position, gets hashed at beginning of level to allow O(1) interaction detection
@@ -48,11 +59,18 @@ class StaticEntity(Entity):
         self.width: int = width
         self.height: int = height
 
+    @abstractmethod
     def draw(self, canvas: Canvas, paddingx, paddingy, block_size) -> None: pass
+    @abstractmethod
     def get_collision_coords(self) -> list[tuple[int, int]]: pass
+    @abstractmethod
     def get_hurt_coords(self) -> list[tuple[int, int]]: pass
+    @abstractmethod
     def get_electricity_coords(self) -> list[tuple[int, int]]: pass
+    @abstractmethod
     def get_interact_coords(self) -> list[tuple[int, int]]: pass
+    @abstractmethod
+    def get_interact_type(self) -> Entity.InteractType: pass
 
 
 # Made of 1x1 blocks, can have any shape
@@ -78,6 +96,8 @@ class DynamicEntity(Entity):
     def get_electricity_coords(self) -> list[tuple[int, int]]: pass
     @abstractmethod
     def get_interact_coords(self) -> list[tuple[int, int]]: pass
+    @abstractmethod
+    def get_interact_type(self) -> Entity.InteractType: pass
 
     @abstractmethod
     # In these coords the entity will require at least one collision to not fall because of gravity

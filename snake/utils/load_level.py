@@ -1,7 +1,7 @@
 import os
 import sys
 
-from game_engine.entities import Snake, Wall, Food, Finish
+from game_engine.entities import StaticEntity, DynamicEntity, Snake, Wall, Food, Finish
 from game_engine import Level
 
 
@@ -48,7 +48,7 @@ def load_level(level_number) -> tuple[Level, int, int]:
                 while ";" in line:
                     x, y = ([int(x) for x in line.strip().split(";")])
                     # Ugly init because Foox expects a list of blocks but its only one block
-                    static_entities.append(Food([(x, y)]))
+                    static_entities.append(Food(x, y))
 
                     line = f.readline()
                 continue
@@ -59,4 +59,6 @@ def load_level(level_number) -> tuple[Level, int, int]:
 
             line = f.readline()
 
+    assert all(isinstance(entity, StaticEntity) for entity in static_entities)
+    assert all(isinstance(entity, DynamicEntity) for entity in dynamic_entities)
     return Level(level_width, level_height, snake, static_entities, dynamic_entities), offsetx, offsety

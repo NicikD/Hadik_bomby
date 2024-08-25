@@ -3,14 +3,12 @@ import time
 
 from scenes import Scene, MainMenu, Game, End
 
-# Defaults
-SCREEN_SIZE = 700
-FPS = 30
-
 
 class SnakeApplication:
 
-    def __init__(self, screen_size=SCREEN_SIZE, fps=FPS):
+    def __init__(self, screen_size=700, fps=30, debug=False):
+        self.debug = debug
+
         # Application output
         self.root = tk.Tk()
         self.root.title("Snake")
@@ -80,7 +78,7 @@ class SnakeApplication:
             if isinstance(self.scene, MainMenu):
                 # Start new game
                 if message == 1:
-                    self.scene = Game(self.canvas, 1)
+                    self.scene = Game(self.canvas, 1, self.debug)
                 # Show end screen and exit application in 3 seconds
                 elif message == 4:
                     self.scene = End(self.canvas)
@@ -92,7 +90,7 @@ class SnakeApplication:
                 # Start next level
                 elif 0 < message < 16:
                     # TODO save progress
-                    self.scene = Game(self.canvas, message + 1)
+                    self.scene = Game(self.canvas, message + 1, self.debug)
 
             elif isinstance(self.scene, End):
                 # Exit application
@@ -113,5 +111,5 @@ class SnakeApplication:
 
 
 if __name__ == "__main__":
-    app = SnakeApplication(screen_size=SCREEN_SIZE, fps=FPS)
+    app = SnakeApplication(debug=True)
     app.run()
