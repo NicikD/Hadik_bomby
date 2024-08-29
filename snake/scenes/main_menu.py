@@ -77,8 +77,10 @@ class MainMenu(Scene):
         c.create_text(n(445, 442), text="→", font=font_arrows, fill=color)
         c.create_text(n(305, 442), text="←", font=font_arrows, fill=color)
         c.create_text(n(125, 380), text="ENTER", font=font_enter, fill=color)
-        c.create_polygon(n(80, 350), n(170, 350), n(170, 480), n(100, 480), n(100, 410), n(80, 410), fill="", outline=color, width=5)
+        c.create_polygon(n(80, 350), n(170, 350), n(170, 480), n(100, 480), n(100, 410), n(80, 410)
+                         , fill="", outline=color, width=5)
 
         menu_x = self.menu_selection_x
         menu_y = self.menu_selection_y
-        c.create_rectangle(n(28 + 240 * menu_x, 28 + 160 * menu_y), n(242 + 240 * menu_x, 162 + 160 * menu_y), width=11, outline="black")
+        c.create_rectangle(n(28 + 240 * menu_x, 28 + 160 * menu_y), n(242 + 240 * menu_x, 162 + 160 * menu_y)
+                           , width=11, outline="black")

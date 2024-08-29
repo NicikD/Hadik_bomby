@@ -19,6 +19,10 @@ class Food(StaticEntity):
                                 , offsety + block_size*(self.y + 1)
                                 , fill="green", outline="")
 
+    # The food is not solid
+    def get_collision_coords(self) -> list[tuple[int, int]]:
+        return [(self.x, self.y)]
+
     # The food interacts when the snake eats it
     def get_interact_coords(self) -> list[tuple[int, int]]:
         return [(self.x, self.y)]
@@ -27,8 +31,6 @@ class Food(StaticEntity):
     def get_interact_type(self) -> StaticEntity.InteractType:
         return StaticEntity.InteractType.FOOD
 
-    # The food is not solid
-    def get_collision_coords(self) -> list[tuple[int, int]]: return []
     # The food does not hurt the snake
     def get_hurt_coords(self) -> list[tuple[int, int]]: return []
     # The food does not conduct electricity

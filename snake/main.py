@@ -1,18 +1,25 @@
 import tkinter as tk
 import time
 
-from scenes import Scene, MainMenu, Game, End
-
+from scenes import Scene, MainMenu, Game, LevelSelect, Settings, End
+from utils import PlayerData, load_player_data, save_player_data
 
 class SnakeApplication:
 
     def __init__(self, screen_size=700, fps=30, debug=False):
         self.debug = debug
 
+        # Player data
+        self.player_data: PlayerData = load_player_data()
+
         # Application output
         self.root = tk.Tk()
         self.root.title("Snake")
         self.root.minsize(100, 100)
+        self.root.geometry(f"{screen_size}x{screen_size}")
+        if self.player_data.fullscreen:
+            self.root.attributes("-fullscreen", True)
+            self.root.state("zoomed")
         self.canvas = tk.Canvas(master=self.root, bg="black", width=screen_size, height=screen_size)
 
         # Running scene that processes user input and displays on canvas
@@ -79,18 +86,45 @@ class SnakeApplication:
                 # Start new game
                 if message == 1:
                     self.scene = Game(self.canvas, 1, self.debug)
+                # Open level select menu
+                if message == 2:
+                    self.scene = LevelSelect(self.canvas, self.player_data)
+                # Open settings menu
+                if message == 3:
+                    self.scene = Settings(self.canvas, self.player_data, self.root)
                 # Show end screen and exit application in 3 seconds
                 elif message == 4:
                     self.scene = End(self.canvas)
 
             elif isinstance(self.scene, Game):
-                # Start main menu (0 - exit level, 16 - finished last level)
-                if message == 0 or message == 16:
+                # Start main menu
+                if message == 0:
                     self.scene = MainMenu(self.canvas)
                 # Start next level
                 elif 0 < message < 16:
-                    # TODO save progress
+                    self.player_data.levels[message] = True
+                    save_player_data(self.player_data)
                     self.scene = Game(self.canvas, message + 1, self.debug)
+                # Return to menu after finishing the game
+                elif message == 16:
+                    self.player_data.levels[message] = True
+                    save_player_data(self.player_data)
+                    self.scene = MainMenu(self.canvas)
+
+            elif isinstance(self.scene, LevelSelect):
+                print(message)
+                # Exit to main menu
+                if message == 0:
+                    self.scene = MainMenu(self.canvas)
+                # Start chosen level
+                elif 0 < message < 17:
+                    self.scene = Game(self.canvas, message, self.debug)
+
+            elif isinstance(self.scene, Settings):
+                # Exit to main menu
+                if message == 0:
+                    save_player_data(self.player_data)
+                    self.scene = MainMenu(self.canvas)
 
             elif isinstance(self.scene, End):
                 # Exit application

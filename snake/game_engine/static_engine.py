@@ -123,10 +123,20 @@ class StaticEngine:
                     entity.charge = charge
 
     # Call when food is eaten at a specific position
-    def update_eaten_food(self, x: int, y: int) -> None:
+    #  eaten == True when eating the food
+    #  eaten == False when undoing eating the food
+    def update_eaten_food(self, x: int, y: int, eaten: bool) -> None:
         for group_id in self._position_hash[(x, y)]:
             group = self._group_hash[group_id]
 
             if group.interaction == Interaction.FOOD:
-                group.entities.eaten = True
-                self._position_hash[(x, y)].remove(group_id)
+                # If eating the food and it wasn't eaten before
+                if eaten and not group.entities.eaten:
+                    # Removes the food from the level
+                    group.entities.eaten = True
+                    self._position_hash[(x, y)].remove(Interaction.WALL.value)
+                # If the food was eaten and undoing movement
+                elif not eaten and group.entities.eaten:
+                    # Puts the food back in the level
+                    group.entities.eaten = False
+                    self._position_hash[(x, y)].append(Interaction.WALL.value)
