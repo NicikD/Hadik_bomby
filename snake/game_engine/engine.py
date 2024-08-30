@@ -3,23 +3,12 @@ from collections import deque
 from copy import deepcopy
 
 from game_engine.entities import Snake
-from game_engine import Level, StaticEngine, Interaction, EatenFood, EntityPosition, Undo
+from game_engine import Action, Level, StaticEngine, Interaction, EatenFood, EntityPosition, Undo
 
 FREEZE_FRAMES = 6
 
 
 class Engine:
-    class Action(Enum):
-        DO_NOTHING = auto()
-        MOVE_LEFT = auto()
-        MOVE_RIGHT = auto()
-        MOVE_UP = auto()
-        MOVE_DOWN = auto()
-        RESTART = auto()
-        # Debug features
-        STOP_MOVEMENT = auto()
-        UNDO_MOVEMENT = auto()
-
     def __init__(self, level: Level):
         self.level: Level = level
 
@@ -41,21 +30,21 @@ class Engine:
 
         # If movement happened last frame
         self.movement_happened = False
-        self.last_movement: Engine.Action = Engine.Action.DO_NOTHING
+        self.last_movement: Action = Action.DO_NOTHING
 
         # Keeps track of all movement that happened to be able to unto it
         self.current_frame_undo = None
         self.undo_stack: deque[Undo] = deque()
 
-    def process_frame(self, action: "Engine.Action"):
+    def process_frame(self, action: Action):
         # Stops all movement even automatic like gravity
-        if action is Engine.Action.STOP_MOVEMENT or self.movement_stopped and action is Engine.Action.DO_NOTHING:
+        if action is Action.STOP_MOVEMENT or self.movement_stopped and action is Action.DO_NOTHING:
             self.movement_stopped = True
             return
-        self.movement_stopped = (action is Engine.Action.UNDO_MOVEMENT)
+        self.movement_stopped = (action is Action.UNDO_MOVEMENT)
 
         # Undoes last frame of movement
-        if action is Engine.Action.UNDO_MOVEMENT:
+        if action is Action.UNDO_MOVEMENT:
             if self.undo_stack:
                 undo = self.undo_stack.pop()
 
@@ -99,7 +88,7 @@ class Engine:
 
         # "Physics" processing
         self.movement_happened = False
-        self.last_movement = Engine.Action.DO_NOTHING
+        self.last_movement = Action.DO_NOTHING
 
         # Saves entity positions to append them to the undo stack if movement happens
         snake_pos = deepcopy(self.level.snake.blocks)
@@ -115,23 +104,23 @@ class Engine:
         # TODO process interakcie return
 
         # Keeps track of all movement that happened to be able to unto it
-        if self.movement_happened and action is not Engine.Action.UNDO_MOVEMENT:
+        if self.movement_happened and action is not Action.UNDO_MOVEMENT:
             self.undo_stack.append(self.current_frame_undo)
 
-    def process_player_movement(self, action: "Engine.Action"):
-        if action is Engine.Action.DO_NOTHING:
+    def process_player_movement(self, action: Action):
+        if action is Action.DO_NOTHING:
             return
 
         eat_food = False
 
         dx, dy = 0, 0
-        if action == Engine.Action.MOVE_LEFT:
+        if action == Action.MOVE_LEFT:
             dx = -1
-        elif action == Engine.Action.MOVE_RIGHT:
+        elif action == Action.MOVE_RIGHT:
             dx = 1
-        elif action == Engine.Action.MOVE_UP:
+        elif action == Action.MOVE_UP:
             dy = -1
-        elif action == Engine.Action.MOVE_DOWN:
+        elif action == Action.MOVE_DOWN:
             dy = 1
 
         # (x, y) of where the snake tries to move to
@@ -189,7 +178,7 @@ class Engine:
                 self.first_frame_falling = True
 
             self.movement_happened = True
-            self.last_movement = Engine.Action.MOVE_DOWN
+            self.last_movement = Action.MOVE_DOWN
             return True
         else:
             self.snake_is_falling = False
@@ -197,13 +186,13 @@ class Engine:
 
 def calculate_last_movement(before, after):
     if before[1] > after[1]:
-        return Engine.Action.MOVE_UP
+        return Action.MOVE_UP
     elif before[1] < after[1]:
-        return Engine.Action.MOVE_DOWN
+        return Action.MOVE_DOWN
     elif before[0] > after[0]:
-        return Engine.Action.MOVE_LEFT
+        return Action.MOVE_LEFT
     elif before[0] < after[0]:
-        return Engine.Action.MOVE_RIGHT
+        return Action.MOVE_RIGHT
     # Should never happen hopefully
     else:
-        return Engine.Action.DO_NOTHING
+        return Action.DO_NOTHING

@@ -22,11 +22,13 @@ class Interaction(Enum):
 # WALL - WALL when charged, NOTHING when not charged, takes 10 frames to lose the charge
 # CHARGE - CHARGE when charged, NOTHING when not charged
 # HAZARD - HAZARD when charged, NOTHING when not charged
+# FOOD - FOOD when eaten, NOTHING when not eaten
 class InteractionType(Enum):
     STATIC = auto()
     WALL = auto()
     HAZARD = auto()
     CHARGE = auto()
+    FOOD = auto()
 
 
 class InteractionGroup:
@@ -72,7 +74,7 @@ class StaticEngine:
 
             if entity.get_interact_type() == StaticEntity.InteractType.FOOD:
                 # Saves a reference to the food, so it can be removed when eaten
-                food = InteractionGroup(Interaction.FOOD, InteractionType.STATIC)
+                food = InteractionGroup(Interaction.FOOD, InteractionType.FOOD)
                 food.entities = entity
                 self._group_hash[self.next_group_id] = food
                 self._position_hash[entity.x, entity.y].append(self.next_group_id)
@@ -129,14 +131,16 @@ class StaticEngine:
         for group_id in self._position_hash[(x, y)]:
             group = self._group_hash[group_id]
 
-            if group.interaction == Interaction.FOOD:
+            if group.type == InteractionType.FOOD:
                 # If eating the food and it wasn't eaten before
                 if eaten and not group.entities.eaten:
                     # Removes the food from the level
                     group.entities.eaten = True
+                    group.interaction = Interaction.NOTHING
                     self._position_hash[(x, y)].remove(Interaction.WALL.value)
                 # If the food was eaten and undoing movement
                 elif not eaten and group.entities.eaten:
                     # Puts the food back in the level
                     group.entities.eaten = False
+                    group.interaction = Interaction.FOOD
                     self._position_hash[(x, y)].append(Interaction.WALL.value)

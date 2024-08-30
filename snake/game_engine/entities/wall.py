@@ -18,16 +18,7 @@ class Wall(StaticEntity):
 
     # The wall is solid
     def get_collision_coords(self) -> list[tuple[int, int]]:
-        collision_coords = []
-
-        for dx in range(self.width):
-            collision_coords.append((self.x + dx, self.y))
-            collision_coords.append((self.x + dx, self.y + self.height - 1))
-        for dy in range(self.height):
-            collision_coords.append((self.x, self.y + dy))
-            collision_coords.append((self.x + self.width - 1, self.y + dy))
-
-        return collision_coords
+        return [(self.x + dx, self.y + dy) for dx in range(self.width) for dy in range(self.height)]
 
     # The wall conducts electricity around it
     def get_electricity_coords(self) -> list[tuple[int, int]]:

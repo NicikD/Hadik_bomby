@@ -4,13 +4,17 @@ import time
 from scenes import Scene, MainMenu, Game, LevelSelect, Settings, End
 from utils import PlayerData, load_player_data, save_player_data
 
-class SnakeApplication:
 
-    def __init__(self, screen_size=700, fps=30, debug=False):
+class SnakeApplication:
+    def __init__(self, screen_size=700, fps=60, force_fullscreen=False, force_autoplay=False, debug=False):
         self.debug = debug
 
         # Player data
         self.player_data: PlayerData = load_player_data()
+        if force_fullscreen:
+            self.player_data.fullscreen = True
+        if force_autoplay:
+            self.player_data.autoplay = True
 
         # Application output
         self.root = tk.Tk()
@@ -85,7 +89,7 @@ class SnakeApplication:
             if isinstance(self.scene, MainMenu):
                 # Start new game
                 if message == 1:
-                    self.scene = Game(self.canvas, 1, self.debug)
+                    self.scene = Game(self.canvas, 1, self.player_data.autoplay, self.debug)
                 # Open level select menu
                 if message == 2:
                     self.scene = LevelSelect(self.canvas, self.player_data)
@@ -104,7 +108,7 @@ class SnakeApplication:
                 elif 0 < message < 16:
                     self.player_data.levels[message] = True
                     save_player_data(self.player_data)
-                    self.scene = Game(self.canvas, message + 1, self.debug)
+                    self.scene = Game(self.canvas, message + 1, self.player_data.autoplay, self.debug)
                 # Return to menu after finishing the game
                 elif message == 16:
                     self.player_data.levels[message] = True
@@ -112,13 +116,12 @@ class SnakeApplication:
                     self.scene = MainMenu(self.canvas)
 
             elif isinstance(self.scene, LevelSelect):
-                print(message)
                 # Exit to main menu
                 if message == 0:
                     self.scene = MainMenu(self.canvas)
                 # Start chosen level
                 elif 0 < message < 17:
-                    self.scene = Game(self.canvas, message, self.debug)
+                    self.scene = Game(self.canvas, message, self.player_data.autoplay, self.debug)
 
             elif isinstance(self.scene, Settings):
                 # Exit to main menu

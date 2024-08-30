@@ -17,7 +17,7 @@ class End(Scene):
             self.exit_message = 1
 
     def display_frame(self, paddingx, paddingy, screen_size) -> None:
-        # GUI made for 508x508 screen originally, too lazy to change it
+        # GUI made for 508x508 screen originally
         scale = screen_size/508
         font = f"Arial {int(screen_size/30)}"
 

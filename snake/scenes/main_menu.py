@@ -51,7 +51,7 @@ class MainMenu(Scene):
     def display_frame(self, paddingx, paddingy, screen_size) -> None:
         c = self.canvas
         # Norming map from 508x508 to square in the middle of the screen of any size
-        # GUI made for 508x508 screen originally, too lazy to change it
+        # GUI made for 508x508 screen originally
         n = lambda x, y: Scene.normalize_to_frame(x, y, paddingx, paddingy, screen_size/508)
 
         font_enter = f"Arial {int(screen_size/30)}"
