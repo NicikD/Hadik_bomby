@@ -1,4 +1,6 @@
 TODO.txt
+.venv
+.idea
 
 # Player save file
 *.save

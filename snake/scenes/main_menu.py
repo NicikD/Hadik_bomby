@@ -70,12 +70,14 @@ class MainMenu(Scene):
 
         c.create_rectangle(n(270, 415), n(480, 480), width=5, outline=color)
         c.create_rectangle(n(340, 350), n(410, 480), width=5, outline=color)
+        c.create_rectangle(n(30, 440), n(140, 480), width=5, outline=color)
         c.create_text(n(375, 375), text="↑", font=font_arrows, fill=color)
         c.create_text(n(375, 440), text="↓", font=font_arrows, fill=color)
         c.create_text(n(445, 442), text="→", font=font_arrows, fill=color)
         c.create_text(n(305, 442), text="←", font=font_arrows, fill=color)
-        c.create_text(n(125, 380), text="ENTER", font=font_enter, fill=color)
-        c.create_polygon(n(80, 350), n(170, 350), n(170, 480), n(100, 480), n(100, 410), n(80, 410),
+        c.create_text(n(85, 460), text="ESC", font=font_enter, fill=color)
+        c.create_text(n(195, 380), text="ENTER", font=font_enter, fill=color)
+        c.create_polygon(n(150, 350), n(240, 350), n(240, 480), n(170, 480), n(170, 410), n(150, 410),
                          fill="", outline=color, width=5)
 
         menu_x = self.menu_selection_x

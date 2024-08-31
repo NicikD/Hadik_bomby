@@ -1,13 +1,14 @@
 import tkinter as tk
-import time
+from time import monotonic
 from collections import deque
+from argparse import ArgumentParser
 
 from scenes import Scene, MainMenu, Game, LevelMenu, LevelSelect, Settings, Transition
 from utils import PlayerData, load_player_data, save_player_data
 
 
 class SnakeApplication:
-    def __init__(self, screen_size=700, fps=60, force_fullscreen=False, force_autoplay=False, debug=False):
+    def __init__(self, window_size=700, fps=60, force_fullscreen=False, force_autoplay=False, debug=False):
         self.debug = debug
 
         # Player data
@@ -21,11 +22,11 @@ class SnakeApplication:
         self.root = tk.Tk()
         self.root.title("Snake")
         self.root.minsize(100, 100)
-        self.root.geometry(f"{screen_size}x{screen_size}")
+        self.root.geometry(f"{window_size}x{window_size}")
         if self.player_data.fullscreen:
             self.root.attributes("-fullscreen", True)
             self.root.state("zoomed")
-        self.canvas = tk.Canvas(master=self.root, bg="black", width=screen_size, height=screen_size)
+        self.canvas = tk.Canvas(master=self.root, bg="black", width=window_size, height=window_size)
 
         # Running scenes that process user input and display on canvas
         #  main menu is the root and should never be popped
@@ -34,13 +35,13 @@ class SnakeApplication:
         # Screen resize manager
         self.paddingx = 0
         self.paddingy = 0
-        self.screen_size = screen_size
-        self.last_x = screen_size
-        self.last_y = screen_size
+        self.screen_size = window_size
+        self.last_x = window_size
+        self.last_y = window_size
 
         # Fps limiter
         self.fps = fps
-        self.last_frame_time = time.monotonic()
+        self.last_frame_time = monotonic()
 
         # For doing pretty transitions
         self.first_half_of_transition_done = False
@@ -127,14 +128,14 @@ class SnakeApplication:
                     self.scenes.append(LevelMenu(self.canvas))
                 # Start next level
                 elif 0 < message < 16:
-                    self.player_data.levels[message] = True
+                    self.player_data.levels[message + 1] = True
                     save_player_data(self.player_data)
                     self.next_level_with_transition(top_scene, message + 1, self.player_data.autoplay, self.debug)
                 # Does not start next level after finishing the game
                 elif message == 16:
-                    self.pop_with_transition(top_scene)
-                    self.player_data.levels[message] = True
+                    self.player_data.levels[message + 1] = True
                     save_player_data(self.player_data)
+                    self.pop_with_transition(top_scene)
                 # Exit level
                 elif message == 17:
                     self.pop_with_transition(top_scene)
@@ -182,8 +183,8 @@ class SnakeApplication:
                 if message == 0:
                     self.root.destroy()
 
-        # Calculate delay to cap at 30 FPS
-        current_time = time.monotonic()
+        # Calculate delay to cap at self.fps FPS
+        current_time = monotonic()
         elapsed_time = current_time - self.last_frame_time
         delay = max(0, int((1 / self.fps - elapsed_time) * 1000))
 
@@ -268,5 +269,18 @@ class SnakeApplication:
 
 
 if __name__ == "__main__":
-    app = SnakeApplication(debug=True)
+    parser = ArgumentParser()
+    parser.add_argument("-size", "--window-size", type=int, default=700,
+                        help="Default application size (width and height) in pixels (default: 700)")
+    parser.add_argument("-fps", "--fps", type=int, default=60,
+                        help="FPS limit (default: 60)")
+    parser.add_argument("-f", "--fullscreen", action="store_true",
+                        help="Starts the game in fullscreen")
+    parser.add_argument("-a", "--autoplay", action="store_true",
+                        help="Starts the game with autoplay")
+    parser.add_argument("-d", "--debug", action="store_true",
+                        help="Enables debug features")
+    args = parser.parse_args()
+
+    app = SnakeApplication(args.window_size, args.fps, args.fullscreen, args.autoplay, args.debug)
     app.run()
