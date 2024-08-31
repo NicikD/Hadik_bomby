@@ -2,7 +2,11 @@
 
 ## User and technical documentation
 
-Sorry the docs are in Slovak only :((
+![User documentation](/Had%20-%20Uživateľská%20dokumentácia.pdf) 
+
+![Technical documentation](/Had%20-%20Technická%20dokumentácia.pdf)
+
+Sorry the docs are in Slovak only :(( 
 
 ## Installation
 
