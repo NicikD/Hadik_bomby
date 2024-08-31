@@ -49,7 +49,7 @@ class SnakeApplication:
         # Key press handler
         self.last_key_pressed = None
 
-    # Entry point
+    # Entry point - blocking the main thread until the application is closed
     def run(self):
         self.canvas.pack(fill="both", expand=True)
         self.canvas.bind_all("<Key>", self.on_key_press)

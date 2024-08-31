@@ -1,5 +1,4 @@
 from collections import deque
-from tkinter import Canvas
 from math import hypot
 
 from game_engine.entities import Food, Finish

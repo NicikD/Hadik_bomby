@@ -30,6 +30,5 @@ optional arguments:
 -d, --debug             Enables debug features
 ```
 
-## Tech used
- - Claude 3.5 Sonnet
- - Supermaven Pro
+## Credits
+ - All code written by Daniel Ničík with the help of Supermaven Pro and Claude 3.5 Sonnet
