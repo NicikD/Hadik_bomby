@@ -2,7 +2,7 @@ from astar import AStar
 from collections import deque
 
 from utils import get_connected_blocks
-from ai import get_reach, remove_invalid_neighbors
+from ai import get_reach
 
 
 # Only computed a couple of times per level
@@ -23,9 +23,6 @@ class FindPathStatic(AStar):
 
     def neighbors(self, current):
         neighbors = self.get_reach(current)
-
-        # Remove neighbors that are not invalid
-        neighbors = self.remove_invalid_neighbors(neighbors)
 
         # Remove groups that do not contain the snake (unreachable)
         #  tuple instead of list because it needs to be hashable for the astar library
@@ -53,7 +50,4 @@ class FindPathStatic(AStar):
         self.snake_length = snake_lenght
 
     def get_reach(self, current: tuple[int, int]) -> list[tuple[int, int]]:
-        return get_reach(current, self.engine, self.snake_length)
-
-    def remove_invalid_neighbors(self, reach: list[tuple[int, int]]) -> list[tuple[int, int]]:
-        return remove_invalid_neighbors(reach, self.engine, self.width, self.height)
+        return get_reach(current, self.engine, self.snake_length, self.width, self.height)

@@ -3,19 +3,20 @@ from collections import deque
 from time import monotonic
 
 from game_engine import Action, Level, Engine
-from ai import SnakeAI, get_reach, remove_invalid_neighbors
+from ai import SnakeAI, get_reach
 from utils import load_level
 from scenes import Scene
 
-FREEZE_FRAMES = 10
+FREEZE_FRAMES = 8
 
 
 # Exit message values:
-#  0 - Exit level
+#  0 - Open menu
 #  1-16 - Finished level 1-16
+#  17 - Exit level
 class Game(Scene):
     def __init__(self, canvas, level_number, autoplay, debug):
-        super().__init__(canvas)
+        super().__init__(canvas, False)
 
         # Whether the AI or the player is controlling the snake
         self.autoplay = autoplay
@@ -30,23 +31,17 @@ class Game(Scene):
         self.level_copy = deepcopy(self.level)
         self.offsetx_copy, self.offsety_copy = self.offsetx, self.offsety
 
-        # Displays level number when level is started
-        self.displayed_level_number = False
-
         # To calculate the camera offset
         self.level_width = self.level.width
         self.level_height = self.level.height
 
-        # To calculate FPS
+        # To calculate FPS (only visible in debug mode)
         self.first_frame_time = monotonic()
         self.frame_count = 0
 
         self.engine = Engine(self.level)
 
-        if autoplay:
-            self.ai = SnakeAI(self.level, self.engine.static_engine)
-        else:
-            self.ai = None
+        self.ai = SnakeAI(self.level, self.engine.static_engine) if self.autoplay else None
         self.ai_solution: deque[Action] = deque()
         # When the AI finds the correct path it will play it back but input slowly so the user can see the solution
         self.playback = False
@@ -75,7 +70,7 @@ class Game(Scene):
         # Level finished successfully (by the AI)
         if self.ai and self.ai.level_finished and not self.playback:
             self.ai_solution = self.ai.final_path
-            self.restart_level()
+            self.restart_level(False)
             self.playback = True
 
         # Exit level
@@ -88,8 +83,7 @@ class Game(Scene):
 
         if self.autoplay:
             # Let """AI""" decide what to do
-            #  but not too fast because it will try to move before the level number is shown
-            if self.displayed_level_number and not self.ai.level_finished:
+            if not self.ai.level_finished:
                 action = self.ai.get_next_move()
 
                 if action in [Action.MOVE_LEFT, Action.MOVE_RIGHT, Action.MOVE_UP, Action.MOVE_DOWN]:
@@ -115,12 +109,12 @@ class Game(Scene):
                 action = Action.MOVE_DOWN
                 move_snake = True
 
-            # Debug features
-            # TODO remove for release
-            elif key_press == "n":
-                action = Action.STOP_MOVEMENT
-            elif key_press == "m":
-                action = Action.UNDO_MOVEMENT
+            # Debug features, the user should not use these for actually playing the game
+            if self.debug:
+                if key_press == "n":
+                    action = Action.STOP_MOVEMENT
+                elif key_press == "m":
+                    action = Action.UNDO_MOVEMENT
 
         if move_snake:
             self.update_camera_offset(action)
@@ -132,13 +126,6 @@ class Game(Scene):
             self.update_camera_offset(self.engine.last_movement)
 
     def display_frame(self, paddingx, paddingy, screen_size) -> None:
-        self.prepare_frame(paddingx, paddingy, screen_size)
-
-        if not self.displayed_level_number:
-            self.display_level_number(paddingx, paddingy, screen_size)
-            self.displayed_level_number = True
-            return
-
         # 17 blocks should fit on the screen
         block_size = screen_size / 17
 
@@ -150,41 +137,24 @@ class Game(Scene):
             entity.draw(self.canvas, entity_paddingx, entity_paddingy, block_size)
         self.level.snake.draw(self.canvas, entity_paddingx, entity_paddingy, block_size)
 
-        # This should not be here, it's just for debugging (maybe remove later)
-        if self.debug:
-            if self.ai:
-                self.ai.display_debug(self.canvas, entity_paddingx, entity_paddingy, block_size)
-            if self.level.snake.blocks:
-                first_block = self.level.snake.blocks[0]
-                self.canvas.create_text(paddingx + 60, paddingy + 20, text=f"x: {first_block[0]}, y: {first_block[1]}"
-                                        , font="Arial 20", fill="red")
+        if self.debug and not self.playback:
+            self.display_debug(paddingx, paddingy, entity_paddingx, entity_paddingy, block_size)
 
-            self.canvas.create_text(paddingx + 130, paddingy + 40, text=f"Movement stopped: {self.engine.movement_stopped}"
-                                    , font="Arial 20", fill="red")
+        # Shows the user that the AI is playing back the solution
+        if self.autoplay:
+            font = f"Arial {int(screen_size / 20)}"
+            if self.playback:
+                self.canvas.create_text(paddingx + screen_size*0.7,
+                                        paddingy + screen_size*0.05,
+                                        text=f"Playing back solution",
+                                        font=font, fill="black")
+            else:
+                self.canvas.create_text(paddingx + screen_size*0.8,
+                                        paddingy + screen_size*0.05,
+                                        text=f"Finding path...",
+                                        font=font, fill="black")
 
-            self.canvas.create_text(paddingx + 80, paddingy + 60, text=f"Autoplay: {self.autoplay}",
-                                    font="Arial 20", fill="red")
-
-            self.canvas.create_text(paddingx + 50, paddingy + 80,
-                                    text=f"FPS: {int(self.frame_count/(monotonic() - self.first_frame_time))}",
-                                    font="Arial 20", fill="red")
-            self.frame_count += 1
-
-            if self.level.snake.blocks:
-                reach = get_reach(self.level.snake.blocks[0], self.engine.static_engine, len(self.level.snake.blocks))
-                for x, y in reach:
-                    self.canvas.create_rectangle(entity_paddingx + block_size*(x + 0.3)
-                                                 , entity_paddingy + block_size*(y + 0.3)
-                                                 , entity_paddingx + block_size*(x + 0.7)
-                                                 , entity_paddingy + block_size*(y + 0.7)
-                                                 , fill="red", outline="")
-                for x, y in remove_invalid_neighbors(reach, self.engine.static_engine, self.level.width, self.level.height):
-                    self.canvas.create_rectangle(entity_paddingx + block_size*(x + 0.3)
-                                                 , entity_paddingy + block_size*(y + 0.3)
-                                                 , entity_paddingx + block_size*(x + 0.7)
-                                                 , entity_paddingy + block_size*(y + 0.7)
-                                                 , fill="blue", outline="")
-
+        # Draws black on all but the screen - creates a border for the level
         self.canvas.create_rectangle(0, 0, paddingx, paddingy + screen_size, fill="black", outline="black")
         self.canvas.create_rectangle(0, 0, paddingx + screen_size, paddingy, fill="black", outline="black")
         self.canvas.create_rectangle(paddingx, paddingy + screen_size
@@ -203,12 +173,15 @@ class Game(Scene):
         self.canvas.update()
         self.canvas.after(800)
 
-    def restart_level(self):
+    def restart_level(self, delete_ai_progress):
         self.level = deepcopy(self.level_copy)
         self.offsetx = self.offsetx_copy
         self.offsety = self.offsety_copy
 
         self.engine = Engine(self.level)
+
+        if delete_ai_progress:
+            self.ai = SnakeAI(self.level, self.engine.static_engine) if self.autoplay else None
 
     # This does not take into account if the snake actually moved - intentional
     def update_camera_offset(self, action):
@@ -225,3 +198,56 @@ class Game(Scene):
                 self.offsety += 1
             elif action == Action.MOVE_DOWN and self.offsety > 16 - self.level_height and y + self.offsety > 8:
                 self.offsety -= 1
+
+    # Displays whatever I needed to get the thing running :D
+    def display_debug(self, paddingx, paddingy, entity_paddingx, entity_paddingy, block_size):
+        if self.ai:
+            if self.ai.find_path_force:
+                go_here = self.ai.find_path_force.destination
+                self.canvas.create_rectangle(entity_paddingx + block_size * (go_here[0]),
+                                             entity_paddingy + block_size * (go_here[1]),
+                                             entity_paddingx + block_size * (go_here[0] + 1),
+                                             entity_paddingy + block_size * (go_here[1] + 1),
+                                             fill="blue", outline="")
+
+            if self.ai.path:
+                for x, y in self.ai.path:
+                    self.canvas.create_rectangle(entity_paddingx + block_size * (x + 0.1),
+                                                 entity_paddingy + block_size * (y + 0.1),
+                                                 entity_paddingx + block_size * (x + 0.9),
+                                                 entity_paddingy + block_size * (y + 0.9),
+                                                 fill="blue", outline="")
+
+        first_block = self.level.snake.blocks[0] if self.level.snake.blocks else (-1, -1)
+        self.canvas.create_text(paddingx + 120, paddingy + 20,
+                                text=f"Snake head x: {first_block[0]}, y: {first_block[1]}",
+                                font="Arial 20", fill="red")
+        self.canvas.create_text(paddingx + 130, paddingy + 40,
+                                text=f"Camera offset x: {self.offsetx}, y: {self.offsety}",
+                                font="Arial 20", fill="red")
+        self.canvas.create_text(paddingx + 130, paddingy + 60,
+                                text=f"Movement stopped: {self.engine.movement_stopped}",
+                                font="Arial 20", fill="red")
+        self.frame_count += 1
+        self.canvas.create_text(paddingx + 50, paddingy + 80,
+                                text=f"FPS: {int(self.frame_count/(monotonic() - self.first_frame_time))}",
+                                font="Arial 20", fill="red")
+
+        if self.level.snake.blocks:
+            reach = get_reach(self.level.snake.blocks[0], self.engine.static_engine
+                              , len(self.level.snake.blocks), self.level.width, self.level.height)
+            for x, y in reach:
+                self.canvas.create_rectangle(entity_paddingx + block_size * (x + 0.3),
+                                             entity_paddingy + block_size * (y + 0.3),
+                                             entity_paddingx + block_size * (x + 0.7),
+                                             entity_paddingy + block_size * (y + 0.7),
+                                             fill="red", outline="")
+
+        font = f"Arial {int(block_size * 17 / 45)}"
+        for x in range(self.level.width):
+            for y in range(self.level.height):
+                # This should not be here but whatever it's just for debug
+                groups = self.engine.static_engine._position_hash[(x, y)]
+                self.canvas.create_text(entity_paddingx + (x + 0.5) * block_size
+                                        , entity_paddingy + (y + 0.5) * block_size
+                                        , text=groups, font=font, fill="blue")

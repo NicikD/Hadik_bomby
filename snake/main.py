@@ -1,7 +1,8 @@
 import tkinter as tk
 import time
+from collections import deque
 
-from scenes import Scene, MainMenu, Game, LevelSelect, Settings, End
+from scenes import Scene, MainMenu, Game, LevelMenu, LevelSelect, Settings, Transition
 from utils import PlayerData, load_player_data, save_player_data
 
 
@@ -26,8 +27,9 @@ class SnakeApplication:
             self.root.state("zoomed")
         self.canvas = tk.Canvas(master=self.root, bg="black", width=screen_size, height=screen_size)
 
-        # Running scene that processes user input and displays on canvas
-        self.scene: Scene = MainMenu(self.canvas)
+        # Running scenes that process user input and display on canvas
+        #  main menu is the root and should never be popped
+        self.scenes: deque[Scene] = deque([MainMenu(self.canvas)])
 
         # Screen resize manager
         self.paddingx = 0
@@ -39,6 +41,9 @@ class SnakeApplication:
         # Fps limiter
         self.fps = fps
         self.last_frame_time = time.monotonic()
+
+        # For doing pretty transitions
+        self.first_half_of_transition_done = False
 
         # Key press handler
         self.last_key_pressed = None
@@ -53,6 +58,7 @@ class SnakeApplication:
 
         self.canvas.mainloop()
 
+    # Resizes objects to fit the screen and manages fullscreen
     def start_resize_manager(self):
         x = self.canvas.winfo_width()
         y = self.canvas.winfo_height()
@@ -70,68 +76,110 @@ class SnakeApplication:
             self.last_x = x
             self.last_y = y
 
+        # If fullscreen was toggled from the window and not from the settings menu
+        fullscreen = self.root.attributes("-fullscreen")
+        if fullscreen and not self.player_data.fullscreen:
+            self.player_data.fullscreen = True
+            save_player_data(self.player_data)
+        elif not fullscreen and self.player_data.fullscreen:
+            self.player_data.fullscreen = False
+            save_player_data(self.player_data)
+
         self.canvas.after(100, self.start_resize_manager)
 
     # Main event loop
     def process(self):
+        top_scene = self.scenes[-1]
         key_pressed = self.last_key_pressed
         self.last_key_pressed = None
 
-        self.scene.process_frame(key_pressed)
+        # Sends user input to the top most scene
+        top_scene.process_frame(key_pressed)
 
-        if self.scene.is_running:
-            self.scene.display_frame(self.paddingx, self.paddingy, self.screen_size)
-            self.canvas.update()
+        if top_scene.is_running:
+            self.display_scenes()
         # Process exit message
         else:
-            message = self.scene.exit_message
+            message = top_scene.exit_message
 
-            if isinstance(self.scene, MainMenu):
+            if isinstance(top_scene, MainMenu):
                 # Start new game
                 if message == 1:
-                    self.scene = Game(self.canvas, 1, self.player_data.autoplay, self.debug)
+                    self.append_with_transition(top_scene,
+                                                Game(self.canvas, 1, self.player_data.autoplay, self.debug),
+                                                False, 1)
                 # Open level select menu
                 if message == 2:
-                    self.scene = LevelSelect(self.canvas, self.player_data)
+                    self.append_with_transition(top_scene, LevelSelect(self.canvas, self.player_data), True)
                 # Open settings menu
                 if message == 3:
-                    self.scene = Settings(self.canvas, self.player_data, self.root)
+                    top_scene.is_running = True
+                    self.scenes.append(Settings(self.canvas, self.player_data, self.root, True))
                 # Show end screen and exit application in 3 seconds
                 elif message == 4:
-                    self.scene = End(self.canvas)
+                    top_scene.is_running = True
+                    self.scenes.append(Transition(self.canvas, Transition.Type.END_APPLICATION))
 
-            elif isinstance(self.scene, Game):
-                # Start main menu
+            elif isinstance(top_scene, Game):
+                # Open level menu
                 if message == 0:
-                    self.scene = MainMenu(self.canvas)
+                    top_scene.is_running = True
+                    self.scenes.append(LevelMenu(self.canvas))
                 # Start next level
                 elif 0 < message < 16:
                     self.player_data.levels[message] = True
                     save_player_data(self.player_data)
-                    self.scene = Game(self.canvas, message + 1, self.player_data.autoplay, self.debug)
-                # Return to menu after finishing the game
+                    self.next_level_with_transition(top_scene, message + 1, self.player_data.autoplay, self.debug)
+                # Does not start next level after finishing the game
                 elif message == 16:
+                    self.pop_with_transition(top_scene)
                     self.player_data.levels[message] = True
                     save_player_data(self.player_data)
-                    self.scene = MainMenu(self.canvas)
+                # Exit level
+                elif message == 17:
+                    self.pop_with_transition(top_scene)
 
-            elif isinstance(self.scene, LevelSelect):
+            elif isinstance(top_scene, LevelMenu):
+                # Resume level
+                if message == 0:
+                    self.scenes.pop()
+                # Exit level
+                elif message == 1:
+                    self.scenes.pop()
+                    game = self.scenes[-1]
+                    game.is_running = False
+                    game.exit_message = 17
+                # Restart level
+                elif message == 2:
+                    self.scenes.pop()
+                    game = self.scenes[-1]
+                    game.restart_level(True)
+                # Open settings
+                elif message == 3:
+                    top_scene.is_running = True
+                    self.scenes.append(Settings(self.canvas, self.player_data, self.root, False))
+
+            elif isinstance(top_scene, LevelSelect):
                 # Exit to main menu
                 if message == 0:
-                    self.scene = MainMenu(self.canvas)
+                    self.pop_with_transition(top_scene)
                 # Start chosen level
                 elif 0 < message < 17:
-                    self.scene = Game(self.canvas, message, self.player_data.autoplay, self.debug)
+                    self.append_with_transition(top_scene,
+                                                Game(self.canvas, message, self.player_data.autoplay, self.debug),
+                                                False, message)
 
-            elif isinstance(self.scene, Settings):
-                # Exit to main menu
+            elif isinstance(top_scene, Settings):
+                # Save settings
                 if message == 0:
+                    self.scenes.pop()
                     save_player_data(self.player_data)
-                    self.scene = MainMenu(self.canvas)
 
-            elif isinstance(self.scene, End):
+            elif isinstance(top_scene, Transition):
+                self.scenes.pop()
+
                 # Exit application
-                if message == 1:
+                if message == 0:
                     self.root.destroy()
 
         # Calculate delay to cap at 30 FPS
@@ -142,6 +190,78 @@ class SnakeApplication:
         # Schedule next frame update
         self.last_frame_time = current_time
         self.canvas.after(delay, self.process)
+
+    def display_scenes(self):
+        # Prepares the canvas for the new frame - creates a white square in the middle of the canvas
+        self.canvas.delete("all")
+        self.canvas.create_rectangle(self.paddingx,
+                                     self.paddingy,
+                                     self.paddingx + self.screen_size,
+                                     self.paddingy + self.screen_size,
+                                     fill="white")
+
+        # Pops from scenes stack until there is a non-transparent scene that will take up the whole screen
+        scenes_to_draw = deque()
+        while True:
+            scene = self.scenes.pop()
+            scenes_to_draw.append(scene)
+            if not scene.transparent:
+                break
+
+        # Displays scenes in reverse order and adds them back to the scenes stack
+        while scenes_to_draw:
+            scene = scenes_to_draw.pop()
+            scene.display_frame(self.paddingx, self.paddingy, self.screen_size)
+            self.scenes.append(scene)
+
+        self.canvas.update()
+
+    # Append scene to the scenes stack but with a transition
+    def append_with_transition(self, current: Scene, new: Scene, generic: bool, level_number: int | None = None):
+        if self.first_half_of_transition_done:
+            self.first_half_of_transition_done = False
+            current.is_running = True
+
+            self.scenes.append(new)
+            if generic:
+                self.scenes.append(Transition(self.canvas, Transition.Type.GENERIC_SECOND_HALF))
+            else:
+                self.scenes.append(Transition(self.canvas, Transition.Type.START_LEVEL_SECOND_HALF, level_number))
+
+        else:
+            self.first_half_of_transition_done = True
+
+            if generic:
+                self.scenes.append(Transition(self.canvas, Transition.Type.GENERIC_FIRST_HALF))
+            else:
+                self.scenes.append(Transition(self.canvas, Transition.Type.START_LEVEL_FIRST_HALF, level_number))
+
+    # Pops scene from the scenes stack but with a transition
+    def pop_with_transition(self, current: Scene):
+        if self.first_half_of_transition_done:
+            self.first_half_of_transition_done = False
+            current.is_running = True
+
+            self.scenes.pop()
+            self.scenes.append(Transition(self.canvas, Transition.Type.GENERIC_SECOND_HALF))
+
+        else:
+            self.first_half_of_transition_done = True
+            self.scenes.append(Transition(self.canvas, Transition.Type.GENERIC_FIRST_HALF))
+
+    # Something between pop_with_transition and append_with_transition
+    def next_level_with_transition(self, current: Scene, level_number: int, autplay: bool, debug: bool):
+        if self.first_half_of_transition_done:
+            self.first_half_of_transition_done = False
+            current.is_running = True
+
+            self.scenes.pop()
+            self.scenes.append(Game(self.canvas, level_number, autplay, debug))
+            self.scenes.append(Transition(self.canvas, Transition.Type.START_LEVEL_SECOND_HALF, level_number))
+
+        else:
+            self.first_half_of_transition_done = True
+            self.scenes.append(Transition(self.canvas, Transition.Type.START_LEVEL_FIRST_HALF, level_number))
 
     def on_key_press(self, event):
         self.last_key_pressed = event.keysym

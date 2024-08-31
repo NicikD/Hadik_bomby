@@ -1,3 +1,5 @@
+from math import hypot
+
 from game_engine import Action, StaticEngine, Interaction
 
 
@@ -40,4 +42,4 @@ def heuristic(start: tuple[tuple[int, int], Action], destination: tuple[int, int
     B = destination
 
     # This will get called a lot
-    return abs(A[0] - B[0]) + abs(A[1] - B[1])
+    return hypot(A[0] - B[0], A[1] - B[1])

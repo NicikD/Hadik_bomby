@@ -1,4 +1,4 @@
-import os
+from os import path
 import sys
 
 from game_engine.entities import StaticEntity, DynamicEntity, Snake, Wall, Food, Finish
@@ -12,8 +12,14 @@ def load_level(level_number) -> tuple[Level, int, int]:
     snake = None
     static_entities, dynamic_entities = [], []
 
+    level_path = f"{path.dirname(sys.modules['__main__'].__file__)}/resources/{level_number}.hadik"
+
+    # TODO implement all levels
+    if not path.exists(level_path):
+        raise NotImplementedError(f"Level {level_number} not implemented")
+
     # Path to resources relative to main.py, I dont know if there is a better way to do it but it seems wrong
-    with open(f"{os.path.dirname(sys.modules["__main__"].__file__)}/resources/{level_number}.hadik", "r") as f:
+    with open(level_path, "r") as f:
         line = f.readline()
         while line:
 

@@ -3,30 +3,35 @@ from tkinter import Tk
 from scenes import Scene
 from utils import PlayerData
 
+
 # Exit message values:
 #  0 - Exit to main menu
 class Settings(Scene):
-    def __init__(self, canvas, player_data: PlayerData, root: Tk):
-        super().__init__(canvas)
+    def __init__(self, canvas, player_data: PlayerData, root: Tk, started_from_main_menu: bool):
+        super().__init__(canvas, True)
 
         self.player_data = player_data
         self.root = root
+        self.started_from_main_menu = started_from_main_menu
 
+        # Menu has 2 options
         self.menu_selection_y = 0
 
     def process_frame(self, key_press):
-        # Exit to main menu
+        # Exit and save settings
         if key_press == "Escape":
             self.is_running = False
             self.exit_message = 0
 
         # Move menu selection
-        elif key_press == "Up":
-            self.menu_selection_y = max(0, self.menu_selection_y - 1)
-        elif key_press == "Down":
-            self.menu_selection_y = min(1, self.menu_selection_y + 1)
+        if self.started_from_main_menu:
+            if key_press == "Up":
+                self.menu_selection_y = max(0, self.menu_selection_y - 1)
+            elif key_press == "Down":
+                self.menu_selection_y = min(1, self.menu_selection_y + 1)
+
         # Change selected option
-        elif key_press == "Return":
+        if key_press == "Return":
             if self.menu_selection_y == 0:
                 self.player_data.fullscreen = not self.player_data.fullscreen
                 self.set_fullscreen(self.player_data.fullscreen)
@@ -41,7 +46,9 @@ class Settings(Scene):
 
         font = f"Arial {int(screen_size/15)}"
 
-        self.prepare_frame(paddingx, paddingy, screen_size)
+        c.create_rectangle(n(20, 194),
+                           n(488, 294),
+                           width=5, fill="white", outline="black")
 
         # Shows which control is selected with a triangle
         c.create_polygon(n(30, 210 + self.menu_selection_y*40),
@@ -55,7 +62,8 @@ class Settings(Scene):
             c.create_line(n(410, 204), n(450, 244), width=7, fill="black")
             c.create_line(n(410, 244), n(450, 204), width=7, fill="black")
 
-        c.create_text(n(150, 264), text="Autoplay", font=font, fill="black")
+        c.create_text(n(150, 264), text="Autoplay", font=font
+                      , fill="black" if self.started_from_main_menu else "gray")
         c.create_rectangle(n(410, 244), n(450, 284), width=7, outline="black")
         if self.player_data.autoplay:
             c.create_line(n(410, 244), n(450, 284), width=7, fill="black")

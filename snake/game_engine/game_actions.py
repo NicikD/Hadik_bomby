@@ -8,6 +8,6 @@ class Action(Enum):
     MOVE_UP = auto()
     MOVE_DOWN = auto()
     RESTART = auto()
-    # Debug features
+    # Only used by the AI
     STOP_MOVEMENT = auto()
     UNDO_MOVEMENT = auto()

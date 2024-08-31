@@ -114,19 +114,6 @@ class SnakeAI:
         snake_head = self.level.snake.blocks[0]
         return get_reach(snake_head[0], snake_head[1], len(self.level.snake.blocks))
 
-    # Displays debug information about the current AI state
-    #  Blue block - The snake already was here
-    #  Orange block - The reach of the snake
-    #  Green block - The snake wants to go here (importance from smallest to largest index)
-    def display_debug(self, c: Canvas, paddingx, paddingy, block_size):
-        if self.path:
-            for x, y in self.path:
-                c.create_rectangle(paddingx + block_size * (x + 0.3)
-                                   , paddingy + block_size * (y + 0.3)
-                                   , paddingx + block_size * (x + 0.7)
-                                   , paddingy + block_size * (y + 0.7)
-                                   , fill="brown", outline="")
-
     def about_to_win(self):
         if not self.victory_square:
             return False

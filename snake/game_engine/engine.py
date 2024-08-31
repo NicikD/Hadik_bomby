@@ -1,11 +1,10 @@
-from enum import Enum, auto
 from collections import deque
 from copy import deepcopy
 
 from game_engine.entities import Snake
 from game_engine import Action, Level, StaticEngine, Interaction, EatenFood, EntityPosition, Undo
 
-FREEZE_FRAMES = 6
+FREEZE_FRAMES = 8
 
 
 class Engine:

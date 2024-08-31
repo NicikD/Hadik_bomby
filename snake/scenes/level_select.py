@@ -7,7 +7,7 @@ from utils import PlayerData
 #  1-16 - Start level 1-16
 class LevelSelect(Scene):
     def __init__(self, canvas, player_data: PlayerData):
-        super().__init__(canvas)
+        super().__init__(canvas, False)
 
         self.levels = player_data.levels
         self.levels[0] = True
@@ -45,8 +45,6 @@ class LevelSelect(Scene):
         n = lambda x, y: Scene.normalize_to_frame(x, y, paddingx, paddingy, screen_size / 508)
 
         font = f"Arial {int(screen_size/10)}"
-
-        self.prepare_frame(paddingx, paddingy, screen_size)
 
         for dx in range(4):
             for dy in range(4):

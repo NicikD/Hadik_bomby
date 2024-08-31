@@ -8,7 +8,7 @@ from scenes import Scene
 #  4 - Exit application
 class MainMenu(Scene):
     def __init__(self, canvas):
-        super().__init__(canvas)
+        super().__init__(canvas, False)
 
         # Menu is 2x2 grid
         self.menu_selection_x = 0
@@ -59,8 +59,6 @@ class MainMenu(Scene):
         font_arrows = f"Arial {int(screen_size/20)}"
         color = "black"
 
-        self.prepare_frame(paddingx, paddingy, screen_size)
-
         c.create_rectangle(n(30, 30), n(240, 160), width=5, outline=color)
         c.create_rectangle(n(270, 30), n(480, 160), width=5, outline=color)
         c.create_rectangle(n(30, 190), n(240, 320), width=5, outline=color)
@@ -77,10 +75,10 @@ class MainMenu(Scene):
         c.create_text(n(445, 442), text="→", font=font_arrows, fill=color)
         c.create_text(n(305, 442), text="←", font=font_arrows, fill=color)
         c.create_text(n(125, 380), text="ENTER", font=font_enter, fill=color)
-        c.create_polygon(n(80, 350), n(170, 350), n(170, 480), n(100, 480), n(100, 410), n(80, 410)
-                         , fill="", outline=color, width=5)
+        c.create_polygon(n(80, 350), n(170, 350), n(170, 480), n(100, 480), n(100, 410), n(80, 410),
+                         fill="", outline=color, width=5)
 
         menu_x = self.menu_selection_x
         menu_y = self.menu_selection_y
-        c.create_rectangle(n(28 + 240 * menu_x, 28 + 160 * menu_y), n(242 + 240 * menu_x, 162 + 160 * menu_y)
-                           , width=11, outline="black")
+        c.create_rectangle(n(28 + 240 * menu_x, 28 + 162 * menu_y), n(242 + 240 * menu_x, 162 + 160 * menu_y),
+                           fill="", outline=color, width=11)
