@@ -20,7 +20,7 @@ class State:
         if move_up:
             self.moves.append(((x, y - 1), Action.MOVE_UP))
 
-        # Removes the move that lead to this state and moves that are not possible
+        # Removes the move that lead to this state and moves that are not possible or desired
         self.moves = [move for move in self.moves
                       if move[0] != parent
                       and (Interaction.WALL not in engine.get_interactions(move[0][0], move[0][1])

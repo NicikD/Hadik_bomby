@@ -3,7 +3,7 @@ from math import hypot
 
 from game_engine.entities import Food, Finish
 from game_engine import Level, StaticEngine, Action, Interaction
-from ai import get_reach, FindPathStatic, FindPathForce
+from ai import FindPathStatic, FindPathForce
 
 
 # "AI" is a strong name for this almost brute force algorithm but whatever
@@ -30,7 +30,7 @@ class SnakeAI:
         # First move is always down because the snake does not start on the ground
         self.first_move = True
 
-    def get_next_move(self):
+    def get_next_move(self) -> Action:
         # First move is always down because the snake does not start on the ground - too lazy to account for this
         if self.first_move:
             self.first_move = False
@@ -107,11 +107,6 @@ class SnakeAI:
         all_finish.sort(key=lambda finish: hypot(finish[0] - snake_head[0], finish[1] - snake_head[1]))
 
         return all_finish[0]
-
-    # All reachable positions from the snake head
-    def get_reach(self) -> list[tuple[int, int]]:
-        snake_head = self.level.snake.blocks[0]
-        return get_reach(snake_head[0], snake_head[1], len(self.level.snake.blocks))
 
     def about_to_win(self):
         if not self.victory_square:

@@ -1,4 +1,4 @@
-from .scene_abstract import Scene
+from .scene_abstract import KeyboardInput, Scene
 from .main_menu import MainMenu
 from .game import Game
 from .transition import Transition

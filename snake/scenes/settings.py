@@ -1,6 +1,6 @@
 from tkinter import Tk
 
-from scenes import Scene
+from scenes import KeyboardInput, Scene
 from utils import PlayerData
 
 
@@ -17,21 +17,21 @@ class Settings(Scene):
         # Menu has 2 options
         self.menu_selection_y = 0
 
-    def process_frame(self, key_press):
+    def process_frame(self, key_press: KeyboardInput | None):
         # Exit and save settings
-        if key_press == "Escape":
+        if key_press is KeyboardInput.ESC:
             self.is_running = False
             self.exit_message = 0
 
         # Move menu selection
         if self.started_from_main_menu:
-            if key_press == "Up":
+            if key_press is KeyboardInput.UP:
                 self.menu_selection_y = max(0, self.menu_selection_y - 1)
-            elif key_press == "Down":
+            elif key_press is KeyboardInput.DOWN:
                 self.menu_selection_y = min(1, self.menu_selection_y + 1)
 
         # Change selected option
-        if key_press == "Return":
+        if key_press is KeyboardInput.ENTER:
             if self.menu_selection_y == 0:
                 self.player_data.fullscreen = not self.player_data.fullscreen
                 self.set_fullscreen(self.player_data.fullscreen)

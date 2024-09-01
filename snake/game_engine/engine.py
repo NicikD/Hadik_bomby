@@ -35,7 +35,7 @@ class Engine:
         self.current_frame_undo = None
         self.undo_stack: deque[Undo] = deque()
 
-    def process_frame(self, action: Action):
+    def process_frame(self, action: Action) -> None:
         # Stops all movement even automatic like gravity
         if action is Action.STOP_MOVEMENT or self.movement_stopped and action is Action.DO_NOTHING:
             self.movement_stopped = True

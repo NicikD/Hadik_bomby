@@ -28,7 +28,6 @@ optional arguments:
 ```
 -s SIZE, --window-size SIZE
                         Default application size (width and height) in pixels (default: 700)
--fps FPS, --fps FPS     FPS limit (default: 60)
 -f, --fullscreen        Starts the game in fullscreen
 -a, --autoplay          Starts the game with autoplay
 -d, --debug             Enables debug features

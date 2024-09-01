@@ -2,7 +2,7 @@ from enum import Enum, auto
 from time import monotonic
 from random import choice
 
-from scenes import Scene
+from scenes import KeyboardInput, Scene
 
 
 # Exit message values:
@@ -37,7 +37,7 @@ class Transition(Scene):
         self.spiral_index = -1
         self.animation_finished = False
 
-    def process_frame(self, key_press):
+    def process_frame(self, key_press: KeyboardInput | None):
         if (self.animation_finished
                 and (self.type == Transition.Type.END_APPLICATION and monotonic() - self.start_time > 3
                      or self.type != Transition.Type.END_APPLICATION)):

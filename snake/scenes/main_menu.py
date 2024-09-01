@@ -1,4 +1,4 @@
-from scenes import Scene
+from scenes import KeyboardInput, Scene
 
 
 # Exit message values:
@@ -14,23 +14,23 @@ class MainMenu(Scene):
         self.menu_selection_x = 0
         self.menu_selection_y = 0
 
-    def process_frame(self, key_press):
+    def process_frame(self, key_press: KeyboardInput | None):
         # Esc to exit application
-        if key_press == "Escape":
+        if key_press is KeyboardInput.ESC:
             self.is_running = False
             self.exit_message = 4
 
         # Move menu selection
-        elif key_press == "Up":
+        elif key_press is KeyboardInput.UP:
             self.menu_selection_y = max(0, self.menu_selection_y - 1)
-        elif key_press == "Down":
+        elif key_press is KeyboardInput.DOWN:
             self.menu_selection_y = min(1, self.menu_selection_y + 1)
-        elif key_press == "Left":
+        elif key_press is KeyboardInput.LEFT:
             self.menu_selection_x = max(0, self.menu_selection_x - 1)
-        elif key_press == "Right":
+        elif key_press is KeyboardInput.RIGHT:
             self.menu_selection_x = min(1, self.menu_selection_x + 1)
 
-        elif key_press == "Return":
+        elif key_press is KeyboardInput.ENTER:
             self.is_running = False
             x = self.menu_selection_x
             y = self.menu_selection_y

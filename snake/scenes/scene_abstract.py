@@ -1,5 +1,19 @@
 from tkinter import Canvas
 from abc import ABC, abstractmethod
+from enum import Enum, auto
+
+
+# Set to None when the key is not supported
+class KeyboardInput(Enum):
+    ENTER = auto()
+    ESC = auto()
+    UP = auto()
+    DOWN = auto()
+    LEFT = auto()
+    RIGHT = auto()
+    # Debug featues, the user should not use these for actually playing the game
+    UNDO = auto()
+    STOP_MOVEMENT = auto()
 
 
 class Scene(ABC):
@@ -18,7 +32,7 @@ class Scene(ABC):
         self.transparent = transparent
 
     @abstractmethod
-    def process_frame(self, key_press: str) -> None:
+    def process_frame(self, key_press: KeyboardInput | None) -> None:
         pass
 
     @abstractmethod

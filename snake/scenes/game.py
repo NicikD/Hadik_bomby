@@ -5,7 +5,7 @@ from time import monotonic
 from game_engine import Action, Level, Engine
 from ai import SnakeAI, get_reach
 from utils import load_level
-from scenes import Scene
+from scenes import KeyboardInput, Scene
 
 FREEZE_FRAMES = 8
 
@@ -15,7 +15,7 @@ FREEZE_FRAMES = 8
 #  1-16 - Finished level 1-16
 #  17 - Exit level
 class Game(Scene):
-    def __init__(self, canvas, level_number, autoplay, debug):
+    def __init__(self, canvas, level_number: int, autoplay: bool, debug: bool):
         super().__init__(canvas, False)
 
         # Whether the AI or the player is controlling the snake
@@ -39,7 +39,7 @@ class Game(Scene):
         self.first_frame_time = monotonic()
         self.frame_count = 0
 
-        self.engine = Engine(self.level)
+        self.engine: Engine = Engine(self.level)
 
         self.ai = SnakeAI(self.level, self.engine.static_engine) if self.autoplay else None
         self.ai_solution: deque[Action] = deque()
@@ -47,7 +47,7 @@ class Game(Scene):
         self.playback = False
         self.level_finish_frame_countdown = FREEZE_FRAMES
 
-    def process_frame(self, key_press):
+    def process_frame(self, key_press: KeyboardInput | None):
         # Playing back the AI solution
         if self.playback:
             if self.ai_solution:
@@ -74,7 +74,7 @@ class Game(Scene):
             self.playback = True
 
         # Exit level
-        if key_press == "Escape":
+        if key_press is KeyboardInput.ESC:
             self.is_running = False
             self.exit_message = 0
             return
@@ -96,25 +96,24 @@ class Game(Scene):
             action = Action.DO_NOTHING
 
             # Move the snake
-            if key_press == "Left":
+            if key_press is KeyboardInput.LEFT:
                 action = Action.MOVE_LEFT
                 move_snake = True
-            elif key_press == "Right":
+            elif key_press is KeyboardInput.RIGHT:
                 action = Action.MOVE_RIGHT
                 move_snake = True
-            elif key_press == "Up":
+            elif key_press is KeyboardInput.UP:
                 action = Action.MOVE_UP
                 move_snake = True
-            elif key_press == "Down":
+            elif key_press is KeyboardInput.DOWN:
                 action = Action.MOVE_DOWN
                 move_snake = True
 
             # Debug features, the user should not use these for actually playing the game
-            if self.debug:
-                if key_press == "n":
-                    action = Action.STOP_MOVEMENT
-                elif key_press == "m":
-                    action = Action.UNDO_MOVEMENT
+            elif key_press is KeyboardInput.STOP_MOVEMENT:
+                action = Action.STOP_MOVEMENT
+            elif key_press is KeyboardInput.UNDO:
+                action = Action.UNDO_MOVEMENT
 
         if move_snake:
             self.update_camera_offset(action)

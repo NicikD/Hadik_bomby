@@ -18,7 +18,7 @@ class FindPathForce:
         self.height = level_height - snake_length + start[1] - 1
         self.max_y = snake_length + start[1] - 1
 
-        # To avoid cycles
+        # To avoid pointless pathfinding - the destination should not be farther than this
         self.max_stack_depth = snake_length
 
         self.move_stack: deque[State] = deque([State(start, None, destination,

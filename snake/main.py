@@ -3,12 +3,16 @@ from time import monotonic
 from collections import deque
 from argparse import ArgumentParser
 
-from scenes import Scene, MainMenu, Game, LevelMenu, LevelSelect, Settings, Transition
+from scenes import KeyboardInput,Scene, MainMenu, Game, LevelMenu, LevelSelect, Settings, Transition
 from utils import PlayerData
 
 
 class SnakeApplication:
-    def __init__(self, window_size=700, fps=60, force_fullscreen=False, force_autoplay=False, debug=False):
+    def __init__(self,
+                 window_size: int = 700,
+                 force_fullscreen: bool = False,
+                 force_autoplay: bool = False,
+                 debug: bool = False):
         self.debug = debug
 
         # Player data
@@ -40,21 +44,24 @@ class SnakeApplication:
         self.last_x = window_size
         self.last_y = window_size
 
-        # Fps limiter
-        self.fps = fps
+        # Fps limiter (60 FPS)
         self.last_frame_time = monotonic()
 
         # For doing pretty transitions
         self.first_half_of_transition_done = False
 
         # Key press handler
-        self.last_key_pressed = None
+        self.last_key_pressed: KeyboardInput | None = None
+
+        # Used only to stop the resize manager
+        self.is_running = False
 
     # Entry point - blocking the main thread until the application is closed
-    def run(self):
+    def run(self) -> None:
         self.canvas.pack(fill="both", expand=True)
         self.canvas.bind_all("<Key>", self.on_key_press)
 
+        self.is_running = True
         self.start_resize_manager()
         self.process()
 
@@ -87,7 +94,8 @@ class SnakeApplication:
             self.player_data.fullscreen = False
             self.player_data.save()
 
-        self.canvas.after(100, self.start_resize_manager)
+        if self.is_running:
+            self.canvas.after(100, self.start_resize_manager)
 
     # Main event loop
     def process(self):
@@ -182,12 +190,13 @@ class SnakeApplication:
 
                 # Exit application
                 if message == 0:
+                    self.is_running = False
                     self.root.destroy()
 
-        # Calculate delay to cap at self.fps FPS
+        # Calculate delay to cap at 60 FPS
         current_time = monotonic()
         elapsed_time = current_time - self.last_frame_time
-        delay = max(0, int((1 / self.fps - elapsed_time) * 1000))
+        delay = max(0, int((1 / 60 - elapsed_time) * 1000))
 
         # Schedule next frame update
         self.last_frame_time = current_time
@@ -266,15 +275,31 @@ class SnakeApplication:
             self.scenes.append(Transition(self.canvas, Transition.Type.START_LEVEL_FIRST_HALF, level_number))
 
     def on_key_press(self, event):
-        self.last_key_pressed = event.keysym
+        key = event.keysym
+        self.last_key_pressed = None
+
+        if key == "Escape":
+            self.last_key_pressed = KeyboardInput.ESC
+        elif key == "Return":
+            self.last_key_pressed = KeyboardInput.ENTER
+        elif key == "Up":
+            self.last_key_pressed = KeyboardInput.UP
+        elif key == "Down":
+            self.last_key_pressed = KeyboardInput.DOWN
+        elif key == "Left":
+            self.last_key_pressed = KeyboardInput.LEFT
+        elif key == "Right":
+            self.last_key_pressed = KeyboardInput.RIGHT
+        elif key == "n" and self.debug:
+            self.last_key_pressed = KeyboardInput.UNDO
+        elif key == "m" and self.debug:
+            self.last_key_pressed = KeyboardInput.STOP_MOVEMENT
 
 
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("-size", "--window-size", type=int, default=700,
                         help="Default application size (width and height) in pixels (default: 700)")
-    parser.add_argument("-fps", "--fps", type=int, default=60,
-                        help="FPS limit (default: 60)")
     parser.add_argument("-f", "--fullscreen", action="store_true",
                         help="Starts the game in fullscreen")
     parser.add_argument("-a", "--autoplay", action="store_true",
@@ -283,5 +308,5 @@ if __name__ == "__main__":
                         help="Enables debug features")
     args = parser.parse_args()
 
-    app = SnakeApplication(args.window_size, args.fps, args.fullscreen, args.autoplay, args.debug)
+    app = SnakeApplication(args.window_size, args.fullscreen, args.autoplay, args.debug)
     app.run()

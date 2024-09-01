@@ -1,21 +1,23 @@
 from astar import AStar
 from collections import deque
 
+
 from utils import get_connected_blocks
 from ai import get_reach
+from game_engine import StaticEngine
 
 
 # Only computed a couple of times per level
 class FindPathStatic(AStar):
-    def __init__(self, engine, level_width, level_height):
+    def __init__(self, engine: StaticEngine, level_width: int, level_height: int):
         super().__init__()
 
         self.snake_length = 4
         self.width = level_width
         self.height = level_height
-        self.engine = engine
+        self.engine: StaticEngine = engine
 
-    def astar(self, start, goal, reversePath=False):
+    def astar(self, start: tuple[int, int], goal: tuple[int, int], reversePath=False) -> deque[tuple[int, int]]:
         path = super().astar(start, goal, reversePath)
 
         # Casts to deque from list_reversegenerator
@@ -46,7 +48,7 @@ class FindPathStatic(AStar):
         return current == goal
 
     # Update when snake eats food
-    def update_lenght(self, snake_lenght):
+    def update_lenght(self, snake_lenght: int):
         self.snake_length = snake_lenght
 
     def get_reach(self, current: tuple[int, int]) -> list[tuple[int, int]]:

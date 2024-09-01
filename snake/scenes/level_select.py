@@ -1,5 +1,5 @@
-from scenes import Scene
 from utils import PlayerData
+from scenes import KeyboardInput, Scene
 
 
 # Exit message values:
@@ -16,24 +16,24 @@ class LevelSelect(Scene):
         self.menu_selection_x = 0
         self.menu_selection_y = 0
 
-    def process_frame(self, key_press):
+    def process_frame(self, key_press: KeyboardInput | None):
         # Exit to main menu
-        if key_press == "Escape":
+        if key_press is KeyboardInput.ESC:
             self.is_running = False
             self.exit_message = 0
 
         # Move menu selection
-        elif key_press == "Up":
+        elif key_press is KeyboardInput.UP:
             self.menu_selection_y = max(0, self.menu_selection_y - 1)
-        elif key_press == "Down":
+        elif key_press is KeyboardInput.DOWN:
             self.menu_selection_y = min(3, self.menu_selection_y + 1)
-        elif key_press == "Left":
+        elif key_press is KeyboardInput.LEFT:
             self.menu_selection_x = max(0, self.menu_selection_x - 1)
-        elif key_press == "Right":
+        elif key_press is KeyboardInput.RIGHT:
             self.menu_selection_x = min(3, self.menu_selection_x + 1)
 
         # Start the level if it is unlocked
-        elif key_press == "Return" and \
+        elif key_press is KeyboardInput.ENTER and \
                 (self.levels[self.level_number()] or (self.menu_selection_x == 0 and self.menu_selection_y == 0)):
             self.is_running = False
             self.exit_message = self.level_number()
