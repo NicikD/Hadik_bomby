@@ -18,8 +18,8 @@ class EntityPosition:
 
 class Undo:
     def __init__(self, snake: deque[tuple[int, int]], dynamic_entities: list[EntityPosition], events: list[EatenFood]):
-        # Snake is the only entity that can change shape, tracks all separate blocks, for other entities (x, y) is enough
-        #  maybe add more states to this - falling and such
+        # Snake is the only entity that can change shape, tracks all separate blocks
+        #  for other entities (x, y) is enough
         self.snake = snake
         self.dynamic_entities = dynamic_entities
-        self.events = []
+        self.events = events

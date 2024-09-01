@@ -27,7 +27,7 @@ def get_connected_blocks(blocks: list[tuple[int, int]]) -> list[list[tuple[int, 
 
 # Groups static entities that share charge (are connected to each other by at least one side)
 #  used in the static engine to preprocess electricity interactions
-def get_connected_conductive_groups(entities: list[StaticEntity]):
+def get_connected_conductive_groups(entities: list[StaticEntity]) -> list[list[StaticEntity]]:
     # Only conductive entities are considered
     entities = [entity for entity in entities if entity.conductive]
 

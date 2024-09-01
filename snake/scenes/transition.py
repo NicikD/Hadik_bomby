@@ -21,7 +21,7 @@ class Transition(Scene):
         super().__init__(canvas, True)
 
         # Ends the transition after 3 seconds if it ends the application
-        #  and after the animation is finished if it starts a level
+        #  or after the animation is finished if it starts a level
         self.start_time = monotonic()
 
         self.type = type

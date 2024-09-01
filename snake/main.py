@@ -4,7 +4,7 @@ from collections import deque
 from argparse import ArgumentParser
 
 from scenes import Scene, MainMenu, Game, LevelMenu, LevelSelect, Settings, Transition
-from utils import PlayerData, load_player_data, save_player_data
+from utils import PlayerData
 
 
 class SnakeApplication:
@@ -12,7 +12,8 @@ class SnakeApplication:
         self.debug = debug
 
         # Player data
-        self.player_data: PlayerData = load_player_data()
+        self.player_data: PlayerData = PlayerData()
+        self.player_data.load()
         if force_fullscreen:
             self.player_data.fullscreen = True
         if force_autoplay:
@@ -81,10 +82,10 @@ class SnakeApplication:
         fullscreen = self.root.attributes("-fullscreen")
         if fullscreen and not self.player_data.fullscreen:
             self.player_data.fullscreen = True
-            save_player_data(self.player_data)
+            self.player_data.save()
         elif not fullscreen and self.player_data.fullscreen:
             self.player_data.fullscreen = False
-            save_player_data(self.player_data)
+            self.player_data.save()
 
         self.canvas.after(100, self.start_resize_manager)
 
@@ -129,12 +130,12 @@ class SnakeApplication:
                 # Start next level
                 elif 0 < message < 16:
                     self.player_data.levels[message + 1] = True
-                    save_player_data(self.player_data)
+                    self.player_data.save()
                     self.next_level_with_transition(top_scene, message + 1, self.player_data.autoplay, self.debug)
                 # Does not start next level after finishing the game
                 elif message == 16:
                     self.player_data.levels[message + 1] = True
-                    save_player_data(self.player_data)
+                    self.player_data.save()
                     self.pop_with_transition(top_scene)
                 # Exit level
                 elif message == 17:
@@ -174,7 +175,7 @@ class SnakeApplication:
                 # Save settings
                 if message == 0:
                     self.scenes.pop()
-                    save_player_data(self.player_data)
+                    self.player_data.save()
 
             elif isinstance(top_scene, Transition):
                 self.scenes.pop()
