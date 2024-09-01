@@ -1,20 +1,20 @@
-from enum import Enum, auto
-from time import monotonic
-from random import choice
+import enum
+import time
+import random
 
-from scenes import KeyboardInput, Scene
+import scenes
 
 
 # Exit message values:
 #  0 - End application
 #  1 - End transition
-class Transition(Scene):
-    class Type(Enum):
-        GENERIC_FIRST_HALF = auto()
-        GENERIC_SECOND_HALF = auto()
-        START_LEVEL_FIRST_HALF = auto()
-        START_LEVEL_SECOND_HALF = auto()
-        END_APPLICATION = auto()
+class Transition(scenes.Scene):
+    class Type(enum.Enum):
+        GENERIC_FIRST_HALF = enum.auto()
+        GENERIC_SECOND_HALF = enum.auto()
+        START_LEVEL_FIRST_HALF = enum.auto()
+        START_LEVEL_SECOND_HALF = enum.auto()
+        END_APPLICATION = enum.auto()
 
     # Only pass level_number if type is START_LEVEL
     def __init__(self, canvas, type: "Transition.Type", level_number: int | None = None):
@@ -22,12 +22,12 @@ class Transition(Scene):
 
         # Ends the transition after 3 seconds if it ends the application
         #  or after the animation is finished if it starts a level
-        self.start_time = monotonic()
+        self.start_time = time.monotonic()
 
         self.type = type
 
         if type is Transition.Type.END_APPLICATION:
-            self.text = "Good game " + choice([":3", ":^)", ":P", ":D", "B-)"])
+            self.text = "Good game " + random.choice([":3", ":^)", ":P", ":D", "B-)"])
         elif type is Transition.Type.START_LEVEL_FIRST_HALF or type is Transition.Type.START_LEVEL_SECOND_HALF:
             self.text = str(level_number)
 
@@ -37,9 +37,9 @@ class Transition(Scene):
         self.spiral_index = -1
         self.animation_finished = False
 
-    def process_frame(self, key_press: KeyboardInput | None):
+    def process_frame(self, key_press: scenes.KeyboardInput | None):
         if (self.animation_finished
-                and (self.type == Transition.Type.END_APPLICATION and monotonic() - self.start_time > 3
+                and (self.type == Transition.Type.END_APPLICATION and time.monotonic() - self.start_time > 3
                      or self.type != Transition.Type.END_APPLICATION)):
             self.is_running = False
             self.exit_message = (0 if self.type is Transition.Type.END_APPLICATION else 1)

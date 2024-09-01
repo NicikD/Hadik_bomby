@@ -1,19 +1,17 @@
 from os import path
-import sys
 
-from game_engine.entities import StaticEntity, DynamicEntity, Snake, Wall, Food, Finish
-from game_engine import Level
+import utils
+import game_engine
 
 
 #  Returns the level info and the starting camera offset
-def load_level(level_number) -> tuple[Level, int, int]:
+def load_level(level_number) -> tuple[game_engine.Level, int, int]:
     level_width, level_height = 0, 0
     offsetx, offsety = 0, 0
     snake = None
     entities = []
 
-    # Path to resources relative to main.py, I don't know if there is a better way to do it, but it seems wrong
-    level_path = f"{path.dirname(sys.modules['__main__'].__file__)}/resources/{level_number}.hadik"
+    level_path = f"{utils.get_resources_path()}/{level_number}.hadik"
 
     # TODO implement all levels
     if not path.exists(level_path):
@@ -31,7 +29,7 @@ def load_level(level_number) -> tuple[Level, int, int]:
 
             elif "SNAKE" in line:
                 x, y = ([int(x) for x in f.readline().strip().split(";")])
-                snake = Snake([
+                snake = game_engine.entities.Snake([
                     (x, y),
                     (x, y + 1),
                     (x + 1, y + 1),
@@ -43,7 +41,7 @@ def load_level(level_number) -> tuple[Level, int, int]:
 
                 while ";" in line:
                     x, y, width, height = ([int(x) for x in line.strip().split(";")])
-                    entities.append(Wall(x, y, width, height))
+                    entities.append(game_engine.entities.Wall(x, y, width, height))
 
                     line = f.readline()
                 continue
@@ -54,15 +52,15 @@ def load_level(level_number) -> tuple[Level, int, int]:
                 while ";" in line:
                     x, y = ([int(x) for x in line.strip().split(";")])
                     # Ugly init because Foox expects a list of blocks but its only one block
-                    entities.append(Food(x, y))
+                    entities.append(game_engine.entities.Food(x, y))
 
                     line = f.readline()
                 continue
 
             elif "FINISH" in line:
                 x, y = ([int(x) for x in f.readline().strip().split(";")])
-                entities.append(Finish(x, y))
+                entities.append(game_engine.entities.Finish(x, y))
 
             line = f.readline()
 
-    return Level(level_width, level_height, snake, entities), offsetx, offsety
+    return game_engine.Level(level_width, level_height, snake, entities), offsetx, offsety

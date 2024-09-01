@@ -1,8 +1,10 @@
-import os
-import sys
+from os import path
+
+import utils
 
 DEFAULT_FULLSCREEN = False
 DEFAULT_AUTOPLAY = False
+
 
 class PlayerData:
     def __init__(self):
@@ -13,15 +15,15 @@ class PlayerData:
         self.autoplay = DEFAULT_AUTOPLAY
 
     def load(self):
-        path = f"{os.path.dirname(sys.modules["__main__"].__file__)}/resources/player_data.save"
+        save_path = f"{utils.get_resources_path()}/player_data.save"
 
         # A save does not exist, use default
-        if not os.path.exists(path):
+        if not path.exists(save_path):
             self.levels = [None] + [False for _ in range(16)]
             self.fullscreen = DEFAULT_FULLSCREEN
             self.autoplay = DEFAULT_AUTOPLAY
 
-        with open(path, "r") as f:
+        with open(save_path, "r") as f:
             line = f.readline()
             while line:
 
@@ -41,7 +43,7 @@ class PlayerData:
     def save(self):
         levels = [str(i) for i in range(17) if self.levels[i] and i != 0]
 
-        with open(f"{os.path.dirname(sys.modules["__main__"].__file__)}/resources/player_data.save", "w") as f:
+        with open(f"{utils.get_resources_path()}/player_data.save", "w") as f:
             f.write("FULLSCREEN" + "\n")
             f.write(("True" if self.fullscreen else "False") + "\n\n")
             f.write("AUTOPLAY" + "\n")

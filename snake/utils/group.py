@@ -1,5 +1,6 @@
 from collections import deque
-from game_engine.entities import StaticEntity
+
+import game_engine
 
 
 # Groups blocks that share at least one side
@@ -27,17 +28,18 @@ def get_connected_blocks(blocks: list[tuple[int, int]]) -> list[list[tuple[int, 
 
 # Groups static entities that share charge (are connected to each other by at least one side)
 #  used in the static engine to preprocess electricity interactions
-def get_connected_conductive_groups(entities: list[StaticEntity]) -> list[list[StaticEntity]]:
+def get_connected_conductive_groups(entities: list[game_engine.entities.StaticEntity])\
+        -> list[list[game_engine.entities.StaticEntity]]:
     # Only conductive entities are considered
     entities = [entity for entity in entities if entity.conductive]
 
-    groups: list[list[StaticEntity]] = []
+    groups: list[list[game_engine.entities.StaticEntity]] = []
 
     while entities:
         # Group of entities that are connected
-        connected: list[StaticEntity] = []
+        connected: list[game_engine.entities.StaticEntity] = []
         # Stack of entities not checked yet
-        not_checked: deque[StaticEntity] = deque([entities.pop()])
+        not_checked: deque[game_engine.entities.StaticEntity] = deque([entities.pop()])
 
         while not_checked:
             current = not_checked.pop()
@@ -70,8 +72,8 @@ def pop_connected_blocks(current: tuple[int, int], blocks: list[tuple[int, int]]
 
 
 # Get connected groups is recursive, this is just a single iteration
-def pop_connected_entities(current: StaticEntity, entities: list[StaticEntity]):
-    connected: list[StaticEntity] = []
+def pop_connected_entities(current: game_engine.entities.StaticEntity, entities: list[game_engine.entities.StaticEntity]):
+    connected: list[game_engine.entities.StaticEntity] = []
     current_reach = set(current.get_electricity_coords())
 
     for entity in entities:

@@ -1,17 +1,16 @@
-from collections import deque
-from copy import deepcopy
+import collections
+import copy
 
-from game_engine.entities import Snake
-from game_engine import Action, Level, StaticEngine, Interaction, EatenFood, EntityPosition, Undo
+import game_engine
 
 FREEZE_FRAMES = 8
 
 
 class Engine:
-    def __init__(self, level: Level):
-        self.level: Level = level
+    def __init__(self, level: game_engine.Level):
+        self.level: game_engine.Level = level
 
-        self.static_engine = StaticEngine(level.static)
+        self.static_engine = game_engine.StaticEngine(level.static)
 
         # Falling takes a bit longer than normal movement (not for the first frame), just for visual effect
         self.snake_is_falling = False
@@ -29,21 +28,22 @@ class Engine:
 
         # If movement happened last frame
         self.movement_happened = False
-        self.last_movement: Action = Action.DO_NOTHING
+        self.last_movement: game_engine.Action = game_engine.Action.DO_NOTHING
 
         # Keeps track of all movement that happened to be able to unto it
         self.current_frame_undo = None
-        self.undo_stack: deque[Undo] = deque()
+        self.undo_stack: collections.deque[game_engine.Undo] = collections.deque()
 
-    def process_frame(self, action: Action) -> None:
+    def process_frame(self, action: game_engine.Action) -> None:
         # Stops all movement even automatic like gravity
-        if action is Action.STOP_MOVEMENT or self.movement_stopped and action is Action.DO_NOTHING:
+        if action is game_engine.Action.STOP_MOVEMENT or self.movement_stopped \
+                and action is game_engine.Action.DO_NOTHING:
             self.movement_stopped = True
             return
-        self.movement_stopped = (action is Action.UNDO_MOVEMENT)
+        self.movement_stopped = (action is game_engine.Action.UNDO_MOVEMENT)
 
         # Undoes last frame of movement
-        if action is Action.UNDO_MOVEMENT:
+        if action is game_engine.Action.UNDO_MOVEMENT:
             if self.undo_stack:
                 undo = self.undo_stack.pop()
 
@@ -56,7 +56,7 @@ class Engine:
                     movement.entity.y = movement.y
 
                 for event in undo.events:
-                    if isinstance(event, EatenFood):
+                    if isinstance(event, game_engine.EatenFood):
                         self.static_engine.update_eaten_food(event.x, event.y, False)
 
                 self.movement_happened = True
@@ -87,12 +87,12 @@ class Engine:
 
         # "Physics" processing
         self.movement_happened = False
-        self.last_movement = Action.DO_NOTHING
+        self.last_movement = game_engine.Action.DO_NOTHING
 
         # Saves entity positions to append them to the undo stack if movement happens
-        snake_pos = deepcopy(self.level.snake.blocks)
-        entity_pos = [EntityPosition(entity, entity.x, entity.y) for entity in self.level.dynamic]
-        self.current_frame_undo = Undo(snake_pos, entity_pos, [])
+        snake_pos = copy.deepcopy(self.level.snake.blocks)
+        entity_pos = [game_engine.EntityPosition(entity, entity.x, entity.y) for entity in self.level.dynamic]
+        self.current_frame_undo = game_engine.Undo(snake_pos, entity_pos, [])
 
         # self.process_automatic_movement()
         if not self.snake_is_falling:
@@ -103,23 +103,23 @@ class Engine:
         # TODO process interakcie return
 
         # Keeps track of all movement that happened to be able to unto it
-        if self.movement_happened and action is not Action.UNDO_MOVEMENT:
+        if self.movement_happened and action is not game_engine.Action.UNDO_MOVEMENT:
             self.undo_stack.append(self.current_frame_undo)
 
-    def process_player_movement(self, action: Action):
-        if action is Action.DO_NOTHING:
+    def process_player_movement(self, action: game_engine.Action):
+        if action is game_engine.Action.DO_NOTHING:
             return
 
         eat_food = False
 
         dx, dy = 0, 0
-        if action == Action.MOVE_LEFT:
+        if action == game_engine.Action.MOVE_LEFT:
             dx = -1
-        elif action == Action.MOVE_RIGHT:
+        elif action == game_engine.Action.MOVE_RIGHT:
             dx = 1
-        elif action == Action.MOVE_UP:
+        elif action == game_engine.Action.MOVE_UP:
             dy = -1
-        elif action == Action.MOVE_DOWN:
+        elif action == game_engine.Action.MOVE_DOWN:
             dy = 1
 
         # (x, y) of where the snake tries to move to
@@ -130,13 +130,13 @@ class Engine:
         if 0 < x < self.level.width + 1 and 0 < y < self.level.height + 1:
 
             static_interactions = self.static_engine.get_interactions(x, y)
-            if Interaction.FOOD in static_interactions:
+            if game_engine.Interaction.FOOD in static_interactions:
                 self.static_engine.update_eaten_food(x, y, True)
-                self.current_frame_undo.events.append(EatenFood(x, y))
+                self.current_frame_undo.events.append(game_engine.EatenFood(x, y))
                 eat_food = True
-            elif Interaction.FINISH in static_interactions:
+            elif game_engine.Interaction.FINISH in static_interactions:
                 self.level_finish_animation = True
-            elif Interaction.WALL in static_interactions:
+            elif game_engine.Interaction.WALL in static_interactions:
                 # Cannot move there
                 return
 
@@ -162,13 +162,13 @@ class Engine:
         interactions = [self.static_engine.get_interactions(x, y) for x, y in self.level.snake.get_gravity_coords()]
 
         # If the snake is not on the ground it will fall
-        if not any(Interaction.WALL in interaction for interaction in interactions):
+        if not any(game_engine.Interaction.WALL in interaction for interaction in interactions):
 
             # If the snake falls on the finish line it ends the level
-            if any(Interaction.FINISH in interaction for interaction in interactions):
+            if any(game_engine.Interaction.FINISH in interaction for interaction in interactions):
                 self.level_finish_animation = True
 
-            self.level.snake = Snake([(x, y + 1) for x, y in self.level.snake.blocks])
+            self.level.snake = game_engine.entities.Snake([(x, y + 1) for x, y in self.level.snake.blocks])
 
             if self.snake_is_falling:
                 self.first_frame_falling = False
@@ -177,7 +177,7 @@ class Engine:
                 self.first_frame_falling = True
 
             self.movement_happened = True
-            self.last_movement = Action.MOVE_DOWN
+            self.last_movement = game_engine.Action.MOVE_DOWN
             return True
         else:
             self.snake_is_falling = False
@@ -185,13 +185,13 @@ class Engine:
 
 def calculate_last_movement(before, after):
     if before[1] > after[1]:
-        return Action.MOVE_UP
+        return game_engine.Action.MOVE_UP
     elif before[1] < after[1]:
-        return Action.MOVE_DOWN
+        return game_engine.Action.MOVE_DOWN
     elif before[0] > after[0]:
-        return Action.MOVE_LEFT
+        return game_engine.Action.MOVE_LEFT
     elif before[0] < after[0]:
-        return Action.MOVE_RIGHT
-    # Should never happen hopefully
+        return game_engine.Action.MOVE_RIGHT
+    # Should never happen
     else:
-        return Action.DO_NOTHING
+        return game_engine.Action.DO_NOTHING

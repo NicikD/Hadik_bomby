@@ -1,4 +1,4 @@
-from scenes import KeyboardInput, Scene
+import scenes
 
 
 # Exit message values:
@@ -6,7 +6,7 @@ from scenes import KeyboardInput, Scene
 #  1 - Exit level
 #  2 - Restart level
 #  3 - Open settings
-class LevelMenu(Scene):
+class LevelMenu(scenes.Scene):
     def __init__(self, canvas):
         super().__init__(canvas, True)
 
@@ -14,24 +14,24 @@ class LevelMenu(Scene):
         self.menu_selection_x = 0
         self.menu_selection_y = 0
 
-    def process_frame(self, key_press: KeyboardInput | None):
+    def process_frame(self, key_press: scenes.KeyboardInput | None):
         # Esc to exit level
-        if key_press is KeyboardInput.ESC:
+        if key_press is scenes.KeyboardInput.ESC:
             self.is_running = False
             self.exit_message = 1
 
         # Move menu selection
-        if key_press is KeyboardInput.UP:
+        if key_press is scenes.KeyboardInput.UP:
             self.menu_selection_y = max(0, self.menu_selection_y - 1)
-        elif key_press is KeyboardInput.DOWN:
+        elif key_press is scenes.KeyboardInput.DOWN:
             self.menu_selection_y = min(1, self.menu_selection_y + 1)
-        elif key_press is KeyboardInput.LEFT:
+        elif key_press is scenes.KeyboardInput.LEFT:
             self.menu_selection_x = max(0, self.menu_selection_x - 1)
-        elif key_press is KeyboardInput.RIGHT:
+        elif key_press is scenes.KeyboardInput.RIGHT:
             self.menu_selection_x = min(1, self.menu_selection_x + 1)
 
         # Choose selected option
-        if key_press is KeyboardInput.ENTER:
+        if key_press is scenes.KeyboardInput.ENTER:
             x = self.menu_selection_x
             y = self.menu_selection_y
 
@@ -42,7 +42,7 @@ class LevelMenu(Scene):
         c = self.canvas
         # Norming map from 508x508 to square in the middle of the screen of any size
         # GUI made for 508x508 screen originally
-        n = lambda x, y: Scene.normalize_to_frame(x, y, paddingx, paddingy, screen_size / 508)
+        n = lambda x, y: scenes.Scene.normalize_to_frame(x, y, paddingx, paddingy, screen_size / 508)
 
         font = f"Arial {int(screen_size / 25)}"
         fill = "white"

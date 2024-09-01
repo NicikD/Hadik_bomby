@@ -1,12 +1,12 @@
-from enum import Enum, auto
+import enum
 
 
-class Action(Enum):
-    DO_NOTHING = auto()
-    MOVE_LEFT = auto()
-    MOVE_RIGHT = auto()
-    MOVE_UP = auto()
-    MOVE_DOWN = auto()
+class Action(enum.Enum):
+    DO_NOTHING = enum.auto()
+    MOVE_LEFT = enum.auto()
+    MOVE_RIGHT = enum.auto()
+    MOVE_UP = enum.auto()
+    MOVE_DOWN = enum.auto()
     # Only used by the AI
-    STOP_MOVEMENT = auto()
-    UNDO_MOVEMENT = auto()
+    STOP_MOVEMENT = enum.auto()
+    UNDO_MOVEMENT = enum.auto()

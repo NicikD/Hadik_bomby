@@ -1,14 +1,14 @@
-from enum import Enum, auto
-from collections import defaultdict
-from typing import Dict
+import enum
+import collections
+import typing
 
-from utils import get_connected_conductive_groups
-from game_engine.entities import StaticEntity, Food, Finish
+import utils
+import game_engine
 
 
 # Describes an interaction at a specific position that can be calculated in advance
 #  these values are reserved for the group_hash
-class Interaction(Enum):
+class Interaction(enum.Enum):
     # Nothing gets set to interactions that change with electricity when they are not charged
     NOTHING = 0
     WALL = 1
@@ -23,12 +23,12 @@ class Interaction(Enum):
 # CHARGE - CHARGE when charged, NOTHING when not charged
 # HAZARD - HAZARD when charged, NOTHING when not charged
 # FOOD - FOOD when eaten, NOTHING when not eaten
-class InteractionType(Enum):
-    STATIC = auto()
-    WALL = auto()
-    HAZARD = auto()
-    CHARGE = auto()
-    FOOD = auto()
+class InteractionType(enum.Enum):
+    STATIC = enum.auto()
+    WALL = enum.auto()
+    HAZARD = enum.auto()
+    CHARGE = enum.auto()
+    FOOD = enum.auto()
 
 
 class InteractionGroup:
@@ -37,15 +37,15 @@ class InteractionGroup:
         self.type = interaction_type
 
         # List of entities that are in this group to update them
-        self.entities: list[StaticEntity] = []
+        self.entities: list[game_engine.entities.StaticEntity] = []
 
 
 class StaticEngine:
-    def __init__(self, static: list[StaticEntity]):
+    def __init__(self, static: list[game_engine.entities.StaticEntity]):
         # What group_id is what interaction, 0-9 are reserved for static behavior (always wall, always death...)
         #  groups with id 10+ are initialized when level is loaded, they change behavior based on electricity
         #  should crash when group_id that does not exist is queried
-        self._group_hash: Dict[int, InteractionGroup] = {
+        self._group_hash: typing.Dict[int, InteractionGroup] = {
             Interaction.WALL.value: InteractionGroup(Interaction.WALL, InteractionType.STATIC),
             Interaction.HAZARD.value: InteractionGroup(Interaction.HAZARD, InteractionType.STATIC),
             Interaction.CHARGE.value: InteractionGroup(Interaction.CHARGE, InteractionType.STATIC),
@@ -57,7 +57,7 @@ class StaticEngine:
         # What group_ids are in what positions
         #  for example position_hash[3, 4] == [2] would indicate that a hazard is in the position (x=3, y=4)
         #  should return empty list when position without any interaction is queried
-        self._position_hash: Dict[tuple[int, int], list[int]] = defaultdict(list)
+        self._position_hash: typing.Dict[tuple[int, int], list[int]] = collections.defaultdict(list)
 
         # Preprocess static interactions
         collision_positions: set[tuple[int, int]] = set()
@@ -72,14 +72,14 @@ class StaticEngine:
             if entity.charge:
                 charge_positions.update(entity.get_electricity_coords())
 
-            if entity.get_interact_type() == StaticEntity.InteractType.FOOD:
+            if entity.get_interact_type() == game_engine.entities.StaticEntity.InteractType.FOOD:
                 # Saves a reference to the food, so it can be removed when eaten
                 food = InteractionGroup(Interaction.FOOD, InteractionType.FOOD)
                 food.entities = entity
                 self._group_hash[self.next_group_id] = food
                 self._position_hash[entity.x, entity.y].append(self.next_group_id)
                 self.next_group_id += 1
-            elif entity.get_interact_type() == StaticEntity.InteractType.FINISH:
+            elif entity.get_interact_type() == game_engine.entities.StaticEntity.InteractType.FINISH:
                 finish_positions.update(entity.get_interact_coords())
 
         for x, y in collision_positions:
@@ -92,7 +92,7 @@ class StaticEngine:
             self._position_hash[(x, y)].append(Interaction.FINISH.value)
 
         # Preprocess electricity
-        for connected_entities in get_connected_conductive_groups(static):
+        for connected_entities in utils.get_connected_conductive_groups(static):
             # Group entities that share the same charge and create interactions groups for them
             group = InteractionGroup(Interaction.CHARGE, InteractionType.CHARGE)
             group.entities = connected_entities

@@ -1,4 +1,4 @@
-from collections import deque
+import collections
 
 
 class EatenFood:
@@ -17,7 +17,8 @@ class EntityPosition:
 
 
 class Undo:
-    def __init__(self, snake: deque[tuple[int, int]], dynamic_entities: list[EntityPosition], events: list[EatenFood]):
+    def __init__(self, snake: collections.deque[tuple[int, int]],
+                 dynamic_entities: list[EntityPosition], events: list[EatenFood]):
         # Snake is the only entity that can change shape, tracks all separate blocks
         #  for other entities (x, y) is enough
         self.snake = snake

@@ -1,13 +1,13 @@
-from tkinter import Tk
+import tkinter
 
-from scenes import KeyboardInput, Scene
-from utils import PlayerData
+import utils
+import scenes
 
 
 # Exit message values:
 #  0 - Exit to main menu
-class Settings(Scene):
-    def __init__(self, canvas, player_data: PlayerData, root: Tk, started_from_main_menu: bool):
+class Settings(scenes.Scene):
+    def __init__(self, canvas, player_data: utils.PlayerData, root: tkinter.Tk, started_from_main_menu: bool):
         super().__init__(canvas, True)
 
         self.player_data = player_data
@@ -17,21 +17,21 @@ class Settings(Scene):
         # Menu has 2 options
         self.menu_selection_y = 0
 
-    def process_frame(self, key_press: KeyboardInput | None):
+    def process_frame(self, key_press: scenes.KeyboardInput | None):
         # Exit and save settings
-        if key_press is KeyboardInput.ESC:
+        if key_press is scenes.KeyboardInput.ESC:
             self.is_running = False
             self.exit_message = 0
 
         # Move menu selection
         if self.started_from_main_menu:
-            if key_press is KeyboardInput.UP:
+            if key_press is scenes.KeyboardInput.UP:
                 self.menu_selection_y = max(0, self.menu_selection_y - 1)
-            elif key_press is KeyboardInput.DOWN:
+            elif key_press is scenes.KeyboardInput.DOWN:
                 self.menu_selection_y = min(1, self.menu_selection_y + 1)
 
         # Change selected option
-        if key_press is KeyboardInput.ENTER:
+        if key_press is scenes.KeyboardInput.ENTER:
             if self.menu_selection_y == 0:
                 self.player_data.fullscreen = not self.player_data.fullscreen
                 self.set_fullscreen(self.player_data.fullscreen)
@@ -42,7 +42,7 @@ class Settings(Scene):
         c = self.canvas
         # Norming map from 508x508 to square in the middle of the screen of any size
         # GUI made for 508x508 screen originally
-        n = lambda x, y: Scene.normalize_to_frame(x, y, paddingx, paddingy, screen_size / 508)
+        n = lambda x, y: scenes.Scene.normalize_to_frame(x, y, paddingx, paddingy, screen_size / 508)
 
         font = f"Arial {int(screen_size/15)}"
 

@@ -1,25 +1,25 @@
-from tkinter import Canvas
-from abc import ABC, abstractmethod
-from enum import Enum, auto
+import tkinter
+import abc
+import enum
 
 
 # Set to None when the key is not supported
-class KeyboardInput(Enum):
-    ENTER = auto()
-    ESC = auto()
-    UP = auto()
-    DOWN = auto()
-    LEFT = auto()
-    RIGHT = auto()
+class KeyboardInput(enum.Enum):
+    ENTER = enum.auto()
+    ESC = enum.auto()
+    UP = enum.auto()
+    DOWN = enum.auto()
+    LEFT = enum.auto()
+    RIGHT = enum.auto()
     # Debug featues, the user should not use these for actually playing the game
-    UNDO = auto()
-    STOP_MOVEMENT = auto()
+    UNDO = enum.auto()
+    STOP_MOVEMENT = enum.auto()
 
 
-class Scene(ABC):
+class Scene(abc.ABC):
 
-    @abstractmethod
-    def __init__(self, canvas: Canvas, transparent: bool):
+    @abc.abstractmethod
+    def __init__(self, canvas: tkinter.Canvas, transparent: bool):
         self.canvas = canvas
 
         # Stop processing when this is False
@@ -31,11 +31,11 @@ class Scene(ABC):
         # Whether the scene is transparent (should display scenes behind it)
         self.transparent = transparent
 
-    @abstractmethod
+    @abc.abstractmethod
     def process_frame(self, key_press: KeyboardInput | None) -> None:
         pass
 
-    @abstractmethod
+    @abc.abstractmethod
     def display_frame(self, paddingx: int, paddingy: int, screen_size: int) -> None:
         pass
 
